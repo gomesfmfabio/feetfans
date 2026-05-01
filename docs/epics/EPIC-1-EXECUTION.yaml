@@ -1,0 +1,306 @@
+---
+epic:
+  id: epic-1
+  title: "Foundation & Core Infrastructure"
+  description: "Establish production-ready foundation including repository setup, CI/CD pipeline, Next.js PWA application with Supabase backend, authentication system with age verification (18+ enforcement), basic user profile management, and a deployable health check endpoint."
+  status: pending
+  created_at: 2026-04-30
+
+execution_plan:
+  mode: sequential # Stories must be completed in order due to dependencies
+  parallel_waves: false # Epic 1 is foundation - no parallelization
+
+stories:
+  - id: story-1.1
+    title: "Repository Setup & CI/CD Pipeline"
+    file: docs/stories/1.1-repository-setup.md
+    status: pending
+    assigned_to: dev
+    estimated_hours: 4
+    dependencies: []
+
+    acceptance_criteria:
+      - Monorepo initialized with Turborepo, pnpm workspaces (/apps/web, /apps/api, /packages/shared)
+      - ESLint, Prettier, TypeScript configs with strict rules and pre-commit hooks (Husky + lint-staged)
+      - GitHub Actions workflow for linting, type checking, testing on push to main
+      - Environment variable management documented (.env.example for dev/staging/prod)
+      - README with setup instructions for local development
+
+    quality_gates:
+      - type: manual
+        description: "Verify monorepo structure is correct"
+        command: "ls -la apps/ packages/"
+      - type: manual
+        description: "Verify CI/CD pipeline runs successfully"
+        command: "Review GitHub Actions run"
+
+    outputs:
+      - Monorepo structure created
+      - CI/CD pipeline configured
+      - Development environment documented
+
+  - id: story-1.2
+    title: "Next.js PWA Application Bootstrap"
+    file: docs/stories/1.2-nextjs-pwa.md
+    status: pending
+    assigned_to: dev
+    estimated_hours: 3
+    dependencies:
+      - story-1.1 # Requires monorepo structure
+
+    acceptance_criteria:
+      - Next.js 14+ app initialized in /apps/web with App Router and TypeScript
+      - PWA configured with next-pwa plugin (manifest.json, service worker, offline fallback)
+      - Tailwind CSS installed and configured with mobile-first utilities
+      - Basic layout component with responsive navigation (header/footer or bottom tab bar)
+      - Landing page displays FeetFans branding and "Coming Soon" message at / route
+      - PWA installable on iOS Safari and Android Chrome with app icon and splash screen
+
+    quality_gates:
+      - type: manual
+        description: "Verify PWA is installable"
+        command: "Test on mobile device (iOS Safari, Android Chrome)"
+      - type: coderabbit
+        description: "Review Next.js App Router patterns and PWA configuration"
+        command: "coderabbit --prompt-only -t uncommitted"
+
+    outputs:
+      - Next.js PWA application running
+      - Landing page accessible
+      - PWA manifest configured
+
+  - id: story-1.3
+    title: "Supabase Backend Setup & Database Schema Foundation"
+    file: docs/stories/1.3-supabase-setup.md
+    status: pending
+    assigned_to: data-engineer
+    estimated_hours: 4
+    dependencies:
+      - story-1.1 # Requires monorepo for /packages/database
+
+    acceptance_criteria:
+      - Supabase project created (dev and prod instances) with connection strings in .env
+      - Database migration system configured (Supabase CLI)
+      - Initial schema migration created with users table (id, email, role, age_verified, created_at)
+      - Row Level Security (RLS) policies enabled on users table
+      - Supabase client library integrated in /packages/database with TypeScript types
+      - Health check API endpoint in /apps/api verifies database connectivity (returns 200 OK)
+
+    quality_gates:
+      - type: manual
+        description: "Verify Supabase project is accessible"
+        command: "supabase status"
+      - type: manual
+        description: "Verify health check endpoint returns 200 OK"
+        command: "curl http://localhost:3001/api/health"
+      - type: coderabbit
+        description: "Review RLS policies and database schema"
+        command: "coderabbit --prompt-only -t uncommitted"
+
+    outputs:
+      - Supabase project configured
+      - Users table created with RLS
+      - Health check endpoint working
+
+  - id: story-1.4
+    title: "Authentication System with Email/Password"
+    file: docs/stories/1.4-authentication.md
+    status: pending
+    assigned_to: dev
+    estimated_hours: 5
+    dependencies:
+      - story-1.2 # Requires Next.js app
+      - story-1.3 # Requires Supabase auth and users table
+
+    acceptance_criteria:
+      - Supabase Auth configured with email/password provider enabled
+      - Sign Up page at /signup with form fields (email, password, confirm password, role selection)
+      - Sign up form validates input (email format, password strength min 8 chars) with error messages
+      - Sign up creates user record in users table with role and age_verified=false
+      - Login page at /login with email/password fields and "Forgot Password" link
+      - Login authenticates via Supabase Auth and redirects to dashboard/feed
+      - Session management configured (JWT stored in httpOnly cookie, 30-day expiry)
+      - Protected route middleware redirects unauthenticated users to /login
+
+    quality_gates:
+      - type: manual
+        description: "Test signup flow end-to-end"
+        command: "Create test account, verify in Supabase dashboard"
+      - type: manual
+        description: "Test login flow and session persistence"
+        command: "Login, close browser, reopen - should still be logged in"
+      - type: coderabbit
+        description: "Review authentication security (password validation, session management)"
+        command: "coderabbit --prompt-only -t uncommitted"
+      - type: automated
+        description: "Run auth integration tests"
+        command: "npm test -- auth.test.ts"
+
+    outputs:
+      - Sign up page functional
+      - Login page functional
+      - Session management working
+      - Protected routes enforced
+
+  - id: story-1.5
+    title: "Age Verification with ID Upload (18+ Enforcement)"
+    file: docs/stories/1.5-age-verification.md
+    status: pending
+    assigned_to: dev
+    estimated_hours: 6
+    dependencies:
+      - story-1.4 # Requires authentication system
+
+    acceptance_criteria:
+      - Age verification page at /verify-age (accessible only to logged-in users with age_verified=false)
+      - File upload component accepts government ID images (JPEG/PNG, max 10MB) with privacy messaging
+      - Uploaded ID stored in Supabase Storage bucket with encryption at rest
+      - Integration with Onfido API to verify age from uploaded ID
+      - Backend webhook receives verification result and updates users.age_verified
+      - Users under 18 are logged out, account flagged for deletion, shown error message
+      - Age-verified users redirected to onboarding wizard or dashboard
+      - Error handling for verification failures (invalid ID, API error) with retry option
+
+    quality_gates:
+      - type: manual
+        description: "Test age verification flow with sample IDs"
+        command: "Upload test ID (18+ and <18), verify correct behavior"
+      - type: manual
+        description: "Verify Onfido integration is working"
+        command: "Check Onfido dashboard for verification requests"
+      - type: coderabbit
+        description: "Review security of ID upload and storage"
+        command: "coderabbit --prompt-only -t uncommitted"
+      - type: compliance
+        description: "Verify US age verification compliance"
+        command: "Review Onfido documentation and implementation against US laws"
+
+    outputs:
+      - Age verification page functional
+      - Onfido API integrated
+      - ID storage secure
+      - Under-18 blocking enforced
+
+  - id: story-1.6
+    title: "Basic User Profile Management"
+    file: docs/stories/1.6-user-profile.md
+    status: pending
+    assigned_to: dev
+    estimated_hours: 3
+    dependencies:
+      - story-1.4 # Requires authentication
+
+    acceptance_criteria:
+      - Profile page at /profile displaying current user data (email, nickname, role, age_verified status)
+      - Edit profile form allows updating nickname (required field, 3-20 chars)
+      - Profile updates save to users table via API endpoint with validation
+      - Success/error toast notifications shown after save attempt
+      - Profile page displays subscription status placeholder (trial, paid, free - implemented in Epic 4)
+
+    quality_gates:
+      - type: manual
+        description: "Test profile editing end-to-end"
+        command: "Update nickname, verify in database"
+      - type: coderabbit
+        description: "Review profile update validation and error handling"
+        command: "coderabbit --prompt-only -t uncommitted"
+      - type: automated
+        description: "Run profile integration tests"
+        command: "npm test -- profile.test.ts"
+
+    outputs:
+      - Profile page functional
+      - Profile editing working
+      - Validation enforced
+
+# Epic-Level Quality Gates (run after all stories complete)
+epic_quality_gates:
+  - type: integration
+    description: "Verify complete Epic 1 integration"
+    checklist:
+      - Monorepo builds successfully (npm run build)
+      - All tests pass (npm test)
+      - Linting passes (npm run lint)
+      - Type checking passes (npm run typecheck)
+      - PWA is installable on mobile
+      - User can sign up, verify age, and access profile
+      - Health check endpoint returns 200 OK
+      - CI/CD pipeline runs successfully on GitHub Actions
+
+  - type: coderabbit
+    description: "Full Epic 1 architecture review"
+    command: "coderabbit --prompt-only --base main"
+    focus:
+      - Security patterns (auth, ID storage, RLS)
+      - Performance (bundle size, lazy loading)
+      - Code quality (TypeScript strict mode, error handling)
+      - Architecture (separation of concerns, modularity)
+
+  - type: deployment
+    description: "Smoke test deployment"
+    checklist:
+      - Deploy to staging environment
+      - Verify all pages load
+      - Verify authentication flow works
+      - Verify age verification flow works
+      - Verify database connectivity
+      - Verify health check endpoint
+
+# Success Criteria
+success_criteria:
+  - All 6 stories completed with acceptance criteria met
+  - All quality gates passed
+  - Epic-level integration tests pass
+  - Production-ready foundation deployed to staging
+  - Documentation updated (README, architecture notes)
+
+# Risk Mitigation
+risks:
+  - risk: "Onfido API integration complexity"
+    mitigation: "Start with sandbox/test mode, use sample IDs for development"
+    owner: dev
+
+  - risk: "PWA configuration issues on iOS"
+    mitigation: "Test early on physical iOS device, use iOS-specific PWA patterns"
+    owner: dev
+
+  - risk: "Supabase RLS policy misconfiguration"
+    mitigation: "Thorough testing of RLS policies, use Supabase dashboard policy editor"
+    owner: data-engineer
+
+  - risk: "CI/CD pipeline failures blocking development"
+    mitigation: "Set up pipeline early (Story 1.1), test with simple commits first"
+    owner: dev
+
+# Estimated Timeline
+timeline:
+  estimated_total_hours: 25
+  estimated_calendar_days: 7-10
+  buffer_percentage: 20
+
+  breakdown:
+    - week_1:
+        focus: "Foundation (Stories 1.1, 1.2, 1.3)"
+        deliverables: "Monorepo, PWA, Supabase"
+    - week_2:
+        focus: "Auth & Verification (Stories 1.4, 1.5, 1.6)"
+        deliverables: "Authentication, Age Verification, Profile"
+
+# Handoff to Epic 2
+handoff:
+  prerequisites:
+    - All Epic 1 stories completed
+    - All quality gates passed
+    - Production-ready foundation deployed
+
+  outputs_for_epic_2:
+    - Functional PWA application
+    - Authenticated user sessions
+    - Age-verified user base
+    - Database schema foundation
+    - Content upload infrastructure ready (Supabase Storage)
+
+  next_epic: "Epic 2: Content Management & Feed"
+  next_steps:
+    - "Create Epic 2 execution plan"
+    - "Begin Story 2.1: Content Upload with Category Tagging"
