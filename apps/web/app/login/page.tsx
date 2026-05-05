@@ -24,14 +24,21 @@ export default function LoginPage() {
 
       if (authError) throw authError;
 
-      // Fetch user data to check role and age_verified
+      // Fetch user data to check role, age_verified, and account_blocked
       const { data: userData, error: userError } = await supabase
         .from('users')
-        .select('role, age_verified')
+        .select('role, age_verified, account_blocked')
         .eq('id', data.user.id)
         .single();
 
       if (userError) throw userError;
+
+      // Check if account is blocked
+      if (userData.account_blocked) {
+        await supabase.auth.signOut();
+        router.push('/account-blocked');
+        return;
+      }
 
       // Redirect based on user role and verification status
       if (userData.role === 'creator' && !userData.age_verified) {

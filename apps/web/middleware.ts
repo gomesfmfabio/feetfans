@@ -27,7 +27,7 @@ export async function middleware(req: NextRequest) {
   } = await supabase.auth.getSession();
 
   // Protected routes
-  const protectedRoutes = ['/dashboard', '/profile', '/upload', '/messages', '/verify-age'];
+  const protectedRoutes = ['/dashboard', '/profile', '/upload', '/messages', '/verify-age', '/feed'];
   const isProtectedRoute = protectedRoutes.some((route) =>
     req.nextUrl.pathname.startsWith(route)
   );
@@ -40,6 +40,19 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
+  // Check if user account is blocked
+  if (session && req.nextUrl.pathname !== '/account-blocked') {
+    const { data: user } = await supabase
+      .from('users')
+      .select('account_blocked')
+      .eq('id', session.user.id)
+      .single();
+
+    if (user?.account_blocked) {
+      return NextResponse.redirect(new URL('/account-blocked', req.url));
+    }
+  }
+
   // Redirect to feed if accessing login/signup while authenticated
   if ((req.nextUrl.pathname === '/login' || req.nextUrl.pathname === '/signup') && session) {
     return NextResponse.redirect(new URL('/feed', req.url));
@@ -49,5 +62,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/profile/:path*', '/upload/:path*', '/messages/:path*', '/verify-age', '/login', '/signup'],
+  matcher: ['/dashboard/:path*', '/profile/:path*', '/upload/:path*', '/messages/:path*', '/verify-age', '/feed/:path*', '/account-blocked', '/login', '/signup'],
 };
