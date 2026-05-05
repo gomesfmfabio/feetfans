@@ -1,8 +1,14 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
+
+const CATEGORIES = [
+  'Barefoot', 'Heels', 'Socks', 'Stockings', 'Nail Polish',
+  'Jewelry', 'Outdoors', 'Beach', 'Gym', 'Yoga',
+  'Artistic', 'Close-up', 'Action', 'Relaxing', 'Playful'
+];
 
 interface ContentItem {
   id: string;
@@ -18,18 +24,113 @@ interface ContentItem {
 
 const ITEMS_PER_PAGE = 20;
 
-export default function FeedPage() {
+// Separate component that uses useSearchParams (wrapped in Suspense)
+function CategoryFilters({
+  selectedCategories,
+  onCategoryChange
+}: {
+  selectedCategories: string[];
+  onCategoryChange: (categories: string[]) => void;
+}) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Initialize selected categories from URL
+  useEffect(() => {
+    const categoriesParam = searchParams.get('categories');
+    if (categoriesParam) {
+      const cats = categoriesParam.split(',').filter(c => CATEGORIES.includes(c));
+      onCategoryChange(cats);
+    }
+  }, [searchParams, onCategoryChange]);
+
+  const toggleCategory = (category: string) => {
+    let newCategories: string[];
+
+    if (selectedCategories.includes(category)) {
+      newCategories = selectedCategories.filter(c => c !== category);
+    } else {
+      newCategories = [...selectedCategories, category];
+    }
+
+    onCategoryChange(newCategories);
+
+    // Update URL
+    const params = new URLSearchParams(searchParams.toString());
+    if (newCategories.length > 0) {
+      params.set('categories', newCategories.join(','));
+    } else {
+      params.delete('categories');
+    }
+
+    router.push(`/feed?${params.toString()}`, { scroll: false });
+  };
+
+  const clearFilters = () => {
+    onCategoryChange([]);
+    router.push('/feed', { scroll: false });
+  };
+
+  return (
+    <div className="mb-6">
+      <div className="flex items-center gap-2 mb-2">
+        <p className="text-sm font-medium text-gray-700">Filter by category:</p>
+        {selectedCategories.length > 0 && (
+          <button
+            onClick={clearFilters}
+            className="text-xs text-primary hover:underline"
+          >
+            Clear all
+          </button>
+        )}
+      </div>
+
+      <div className="flex gap-2 overflow-x-auto pb-2">
+        {CATEGORIES.map(category => (
+          <button
+            key={category}
+            onClick={() => toggleCategory(category)}
+            className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+              selectedCategories.includes(category)
+                ? 'bg-primary text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            {category}
+          </button>
+        ))}
+      </div>
+
+      {selectedCategories.length > 0 && (
+        <p className="text-xs text-gray-500 mt-2">
+          Filtering by: {selectedCategories.join(', ')}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function FeedContent() {
   const router = useRouter();
   const [content, setContent] = useState<ContentItem[]>([]);
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const observerTarget = useRef<HTMLDivElement>(null);
+
+  const handleCategoryChange = useCallback((categories: string[]) => {
+    setSelectedCategories(categories);
+    // Reset pagination when categories change
+    setContent([]);
+    setPage(0);
+    setHasMore(true);
+  }, []);
 
   useEffect(() => {
     checkAuthAndLoadContent();
-  }, []);
+  }, [selectedCategories]);
 
   const checkAuthAndLoadContent = async () => {
     try {
@@ -49,7 +150,8 @@ export default function FeedPage() {
   const loadInitialContent = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+
+      let query = supabase
         .from('content')
         .select(`
           id,
@@ -59,7 +161,14 @@ export default function FeedPage() {
           created_at,
           creator_id,
           creator:users!creator_id(nickname)
-        `)
+        `);
+
+      // Apply category filter if selected
+      if (selectedCategories.length > 0) {
+        query = query.overlaps('categories', selectedCategories);
+      }
+
+      const { data, error } = await query
         .order('created_at', { ascending: false })
         .range(0, ITEMS_PER_PAGE - 1);
 
@@ -89,7 +198,7 @@ export default function FeedPage() {
       const start = page * ITEMS_PER_PAGE;
       const end = start + ITEMS_PER_PAGE - 1;
 
-      const { data, error } = await supabase
+      let query = supabase
         .from('content')
         .select(`
           id,
@@ -99,7 +208,14 @@ export default function FeedPage() {
           created_at,
           creator_id,
           creator:users!creator_id(nickname)
-        `)
+        `);
+
+      // Apply category filter if selected
+      if (selectedCategories.length > 0) {
+        query = query.overlaps('categories', selectedCategories);
+      }
+
+      const { data, error } = await query
         .order('created_at', { ascending: false })
         .range(start, end);
 
@@ -123,7 +239,7 @@ export default function FeedPage() {
     } finally {
       setLoadingMore(false);
     }
-  }, [page, loadingMore, hasMore]);
+  }, [page, loadingMore, hasMore, selectedCategories]);
 
   // Infinite scroll with Intersection Observer
   useEffect(() => {
@@ -206,10 +322,22 @@ export default function FeedPage() {
     <div className="min-h-screen bg-gray-50 py-6">
       <div className="max-w-2xl mx-auto px-4">
         {/* Header */}
-        <div className="mb-6">
+        <div className="mb-4">
           <h1 className="text-3xl font-bold">Discover</h1>
           <p className="text-gray-600 mt-1">Explore content from creators</p>
         </div>
+
+        {/* Category Filters - Wrapped in Suspense */}
+        <Suspense fallback={
+          <div className="mb-6">
+            <p className="text-sm font-medium text-gray-700 mb-2">Loading filters...</p>
+          </div>
+        }>
+          <CategoryFilters
+            selectedCategories={selectedCategories}
+            onCategoryChange={handleCategoryChange}
+          />
+        </Suspense>
 
         {/* Empty State */}
         {content.length === 0 ? (
@@ -309,5 +437,17 @@ export default function FeedPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function FeedPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-gray-600">Loading feed...</div>
+      </div>
+    }>
+      <FeedContent />
+    </Suspense>
   );
 }
