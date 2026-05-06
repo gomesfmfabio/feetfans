@@ -11,6 +11,7 @@
     "test": "echo \"No tests yet\" && exit 0"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.94.0",
     "@supabase/auth-helpers-nextjs": "^0.15.0",
     "@supabase/supabase-js": "^2.105.3",
     "next": "^15.1.7",

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { generateAgentMessage } from '../../../../../../lib/ai-agents/message-generator';
 
 // Cron job endpoint to process due AI agent assignments
 // Run hourly to check for assignments where scheduled_for <= NOW()
-// Creates conversations and marks assignments as sent
+// Creates conversations, generates AI messages, and marks assignments as sent
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5 minutes timeout
@@ -34,6 +35,7 @@ export async function GET(request: NextRequest) {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Call the database function to process due assignments
+    // This creates conversations and marks assignments as sent
     const { data, error } = await supabase.rpc('process_due_agent_assignments');
 
     if (error) {
@@ -44,19 +46,72 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Count successes and errors
+    // Process results and generate AI messages
     const results = data || [];
-    const successful = results.filter((r: any) => r.status === 'conversation_created').length;
-    const failed = results.filter((r: any) => r.status.startsWith('error')).length;
+    const messageResults = [];
 
-    console.log(`Processed ${results.length} assignments: ${successful} successful, ${failed} failed`);
+    for (const assignment of results) {
+      if (assignment.status === 'conversation_created') {
+        try {
+          // Get conversation_id from the assignment
+          const { data: assignmentData } = await supabase
+            .from('agent_assignments')
+            .select('conversation_id')
+            .eq('id', assignment.assignment_id)
+            .single();
+
+          if (!assignmentData?.conversation_id) {
+            messageResults.push({
+              assignment_id: assignment.assignment_id,
+              status: 'error: conversation_id not found',
+            });
+            continue;
+          }
+
+          // Generate AI message
+          await generateAgentMessage(
+            assignment.agent_id,
+            assignment.creator_id,
+            assignmentData.conversation_id
+          );
+
+          messageResults.push({
+            assignment_id: assignment.assignment_id,
+            status: 'message_sent',
+          });
+        } catch (err: any) {
+          console.error(
+            `Failed to generate message for assignment ${assignment.assignment_id}:`,
+            err.message
+          );
+          messageResults.push({
+            assignment_id: assignment.assignment_id,
+            status: `error: ${err.message}`,
+          });
+        }
+      } else {
+        // Assignment failed during conversation creation
+        messageResults.push({
+          assignment_id: assignment.assignment_id,
+          status: assignment.status,
+        });
+      }
+    }
+
+    // Count successes and errors
+    const successful = messageResults.filter((r: any) => r.status === 'message_sent').length;
+    const failed = messageResults.filter((r: any) => r.status.startsWith('error')).length;
+
+    console.log(
+      `Processed ${results.length} assignments: ${successful} messages sent, ${failed} failed`
+    );
 
     return NextResponse.json({
       success: true,
       processed: results.length,
       successful,
       failed,
-      results,
+      results: messageResults,
     });
   } catch (err: any) {
     console.error('Cron job error:', err);
