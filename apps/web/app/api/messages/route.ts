@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import { generateAgentResponse } from '../../../../lib/ai-agents/response-generator';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 
@@ -170,6 +171,32 @@ export async function POST(request: NextRequest) {
       .from('conversations')
       .update({ updated_at: now.toISOString() })
       .eq('id', conversationId);
+
+    // Check if recipient is an AI agent and trigger automatic response
+    const recipientId =
+      conversation.creator_id === session.user.id
+        ? conversation.consumer_id
+        : conversation.creator_id;
+
+    // Check if recipient is an AI agent (exists in ai_agents table)
+    const { data: isAgent } = await supabase
+      .from('ai_agents')
+      .select('id')
+      .eq('id', recipientId)
+      .single();
+
+    if (isAgent) {
+      // Trigger AI agent response asynchronously (don't block the response)
+      generateAgentResponse(
+        recipientId,
+        conversationId,
+        content.trim(),
+        session.user.id
+      ).catch((error) => {
+        console.error('Failed to generate AI agent response:', error);
+        // Don't fail the request if AI response fails
+      });
+    }
 
     return NextResponse.json({
       success: true,
