@@ -51,8 +51,8 @@ export default function SignUpPage() {
 
       if (dbError) throw dbError;
 
-      // Redirect to age verification
-      router.push('/verify-age');
+      // Redirect to email verification page
+      router.push(`/verify-email?email=${encodeURIComponent(email)}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {

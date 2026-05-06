@@ -172,6 +172,12 @@ export default function UploadPage() {
     }
   };
 
+  const handleRetry = () => {
+    setError('');
+    setUploadProgress(0);
+    handleSubmit(new Event('submit') as any);
+  };
+
   // Show loading while checking eligibility
   if (userRole === null) {
     return (
@@ -276,7 +282,16 @@ export default function UploadPage() {
           {/* Error Message */}
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-md text-sm">
-              {error}
+              <div className="flex items-center justify-between">
+                <span>{error}</span>
+                <button
+                  type="button"
+                  onClick={handleRetry}
+                  className="ml-4 text-red-600 hover:text-red-700 font-medium underline"
+                >
+                  Retry
+                </button>
+              </div>
             </div>
           )}
 
