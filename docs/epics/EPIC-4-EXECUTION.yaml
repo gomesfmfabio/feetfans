@@ -1,0 +1,304 @@
+---
+epic:
+  id: epic-4
+  title: "Trial & Subscription Management"
+  description: "Build the complete trial-to-paid conversion funnel including 7-day trial tracking, feature gating (trial users can only message AI agents, paid users can message real consumers), checkout flow for $9/month subscription, integration with FeetFans course for free access, and subscription status enforcement across the platform."
+  status: pending
+  created_at: 2026-05-03
+  depends_on:
+    - epic-1 # Requires authentication and user profiles
+    - epic-3 # Trial/paid gating applies to messaging features
+
+execution_plan:
+  mode: sequential # Trial tracking must be ready before feature gating and checkout
+  parallel_waves: false # Subscription features depend on trial infrastructure
+
+stories:
+  - id: story-4.1
+    title: "Trial Period Tracking & Initialization"
+    file: docs/stories/4.1-trial-tracking.md
+    status: pending
+    assigned_to: dev
+    estimated_hours: 3
+    dependencies:
+      - story-1.4 # Requires authentication system
+
+    acceptance_criteria:
+      - Database schema extended with trial_started_at, trial_ends_at, subscription_status columns
+      - On creator signup (after age verification), set trial_started_at = NOW(), trial_ends_at = NOW() + 7 days
+      - Consumers marked as subscription_status = 'consumer' (no payment required)
+      - Trial countdown shown in UI "Trial X days remaining"
+      - Cron job runs daily to expire trials (trial_ends_at < NOW() AND status = 'trial' → 'expired')
+
+    quality_gates:
+      - type: manual
+        description: "Test trial initialization on signup"
+        command: "Create creator account, verify trial dates set correctly in database"
+      - type: coderabbit
+        description: "Review trial tracking logic"
+        command: "coderabbit --prompt-only -t uncommitted"
+
+    outputs:
+      - Trial tracking columns added
+      - Trial countdown UI component
+      - Cron job for trial expiration
+
+  - id: story-4.2
+    title: "Feature Gating - Trial vs Paid Access"
+    file: docs/stories/4.2-feature-gating.md
+    status: pending
+    assigned_to: dev
+    estimated_hours: 4
+    dependencies:
+      - story-4.1 # Requires subscription_status tracking
+      - story-3.3 # Applies to messaging features
+
+    acceptance_criteria:
+      - Trial users can upload content, view feed/discovery, message AI agents only
+      - Trial users CANNOT message real consumers (UI shows "Upgrade to unlock")
+      - Trial users CANNOT see links in AI messages
+      - Paid users (subscription_status = 'paid' or 'free_feetfans') have full access
+      - Expired users see upgrade prompt, read-only inbox
+      - Middleware enforces feature gating on backend API
+
+    quality_gates:
+      - type: manual
+        description: "Test feature gating for trial vs paid users"
+        command: "As trial user, verify cannot message consumers. As paid user, verify full access"
+      - type: coderabbit
+        description: "Review feature gating middleware and UI logic"
+        command: "coderabbit --prompt-only -t uncommitted"
+
+    outputs:
+      - Feature gating middleware functional
+      - UI displays upgrade prompts for trial users
+      - Backend enforces access restrictions
+
+  - id: story-4.3
+    title: "Trial-to-Paid Conversion Checkout Flow"
+    file: docs/stories/4.3-checkout-flow.md
+    status: pending
+    assigned_to: dev
+    estimated_hours: 6
+    dependencies:
+      - story-4.1 # Requires trial tracking
+      - story-4.2 # Upgrade prompts lead to checkout
+
+    acceptance_criteria:
+      - Upgrade CTA displayed for trial users "Upgrade to message real buyers - $9/month"
+      - /subscribe checkout page displays pricing and benefits
+      - Payment form collects credit card (Stripe Elements or manual entry for MVP)
+      - On success, backend updates subscription_status = 'paid', trial_ends_at = NULL
+      - User redirected with success message "Welcome to FeetFans Pro!"
+      - Error handling for payment failures
+      - Subscription stored in subscriptions table
+
+    quality_gates:
+      - type: manual
+        description: "Test checkout flow end-to-end"
+        command: "Click upgrade CTA, complete payment (test mode), verify subscription status updated"
+      - type: coderabbit
+        description: "Review payment integration and security"
+        command: "coderabbit --prompt-only -t uncommitted"
+      - type: security
+        description: "Verify payment data not stored insecurely"
+        command: "Audit payment form, ensure Stripe handles sensitive data"
+
+    outputs:
+      - Checkout page functional
+      - Stripe integration working
+      - Subscription status updates on payment
+
+  - id: story-4.4
+    title: "FeetFans Course Integration - Free Access"
+    file: docs/stories/4.4-course-integration.md
+    status: pending
+    assigned_to: dev
+    estimated_hours: 3
+    dependencies:
+      - story-4.1 # Requires subscription_status tracking
+
+    acceptance_criteria:
+      - Database users table adds feetfans_course_id column
+      - Backend API POST /api/verify-feetfans-access verifies course ID
+      - On verification success, subscription_status = 'free_feetfans', trial_ends_at = NULL
+      - Free FeetFans users have same access as paid users
+      - Verification flow accessible from /profile or /subscribe
+      - Admin dashboard to manually grant free_feetfans status
+
+    quality_gates:
+      - type: manual
+        description: "Test course integration verification"
+        command: "Enter valid course ID, verify free_feetfans status granted"
+      - type: coderabbit
+        description: "Review course ID verification logic"
+        command: "coderabbit --prompt-only -t uncommitted"
+
+    outputs:
+      - Course integration API endpoint
+      - Course ID verification working
+      - Admin manual grant functionality
+
+  - id: story-4.5
+    title: "Subscription Status Enforcement & Expiration Handling"
+    file: docs/stories/4.5-subscription-enforcement.md
+    status: pending
+    assigned_to: dev
+    estimated_hours: 4
+    dependencies:
+      - story-4.3 # Requires subscriptions table
+
+    acceptance_criteria:
+      - Middleware checks subscription_status on protected routes
+      - Expired trial users redirected to /subscribe
+      - Paid users with failed payments → subscription_status = 'expired'
+      - Grace period 3 days past due before expiration (configurable)
+      - Expired paid users see "Subscription expired. Update payment to regain access"
+      - Re-activation flow for expired users
+      - Webhook handler for Stripe subscription events
+
+    quality_gates:
+      - type: manual
+        description: "Test subscription expiration and enforcement"
+        command: "Manually expire subscription, verify access restricted and prompts shown"
+      - type: coderabbit
+        description: "Review expiration logic and webhook handling"
+        command: "coderabbit --prompt-only -t uncommitted"
+
+    outputs:
+      - Subscription enforcement middleware
+      - Stripe webhook handler
+      - Re-activation flow functional
+
+  - id: story-4.6
+    title: "Subscription Management Dashboard"
+    file: docs/stories/4.6-subscription-dashboard.md
+    status: pending
+    assigned_to: dev
+    estimated_hours: 4
+    dependencies:
+      - story-4.3 # Requires subscriptions table
+
+    acceptance_criteria:
+      - /profile shows current plan, next billing date, payment method last 4 digits
+      - "Cancel Subscription" button with confirmation modal
+      - Cancel action sets cancel_at_period_end = true in Stripe
+      - UI shows "Subscription ends on [date]. Reactivate anytime"
+      - "Update Payment Method" redirects to Stripe portal or custom flow
+      - Free FeetFans users see "No billing - Free via FeetFans"
+
+    quality_gates:
+      - type: manual
+        description: "Test subscription management UI"
+        command: "View subscription details, cancel subscription, verify Stripe updates"
+      - type: coderabbit
+        description: "Review subscription management UI and Stripe portal integration"
+        command: "coderabbit --prompt-only -t uncommitted"
+
+    outputs:
+      - Subscription dashboard functional
+      - Cancel subscription working
+      - Stripe portal integration
+
+# Epic-Level Quality Gates
+epic_quality_gates:
+  - type: integration
+    description: "Verify complete Epic 4 integration"
+    checklist:
+      - Trial period tracks correctly (7 days)
+      - Feature gating works (trial users restricted, paid users full access)
+      - Checkout flow completes successfully (test mode)
+      - FeetFans course integration grants free access
+      - Subscription expiration enforced correctly
+      - Subscription dashboard displays correct info
+      - Stripe webhooks handle subscription events
+
+  - type: coderabbit
+    description: "Full Epic 4 architecture review"
+    command: "coderabbit --prompt-only --base main"
+    focus:
+      - Payment security (Stripe integration, no sensitive data stored)
+      - Feature gating middleware (access control logic)
+      - Subscription status tracking (database schema)
+      - Webhook security (signature verification)
+
+  - type: security
+    description: "Payment security audit"
+    checklist:
+      - No credit card data stored in database
+      - Stripe Elements used for payment form
+      - Webhook signatures verified
+      - SSL/TLS enforced on all payment pages
+
+  - type: conversion
+    description: "Trial-to-paid conversion tracking"
+    checklist:
+      - Track trial users who upgrade
+      - Track trial users who expire without upgrading
+      - Analytics events for checkout steps
+      - A/B test readiness for pricing/messaging
+
+# Success Criteria
+success_criteria:
+  - All 6 stories completed with acceptance criteria met
+  - All quality gates passed
+  - Trial period tracks and expires correctly
+  - Feature gating motivates upgrades (trial users see value but need to pay)
+  - Checkout flow converts trial users to paid
+  - FeetFans course integration works seamlessly
+  - Subscription management allows cancellation and updates
+  - Payment security validated (no sensitive data stored)
+
+# Risk Mitigation
+risks:
+  - risk: "Stripe integration complexity delays MVP"
+    mitigation: "Start with Stripe test mode, use pre-built Stripe Elements, consider manual subscription management for first users"
+    owner: dev
+
+  - risk: "Feature gating accidentally blocks paid users"
+    mitigation: "Thorough testing of middleware logic, add monitoring/alerts for access control errors"
+    owner: dev
+
+  - risk: "Trial expiration logic has edge cases (timezone issues, race conditions)"
+    mitigation: "Use UTC timestamps, test edge cases (expires at midnight, daylight saving), add buffer to cron job timing"
+    owner: dev
+
+  - risk: "FeetFans course ID verification vulnerable to fraud"
+    mitigation: "Validate course ID against external API or database, rate limit verification attempts, flag suspicious activity"
+    owner: dev
+
+  - risk: "Subscription webhook failures cause incorrect billing status"
+    mitigation: "Implement idempotency, retry logic, manual admin tools to fix billing issues"
+    owner: dev
+
+# Estimated Timeline
+timeline:
+  estimated_total_hours: 24
+  estimated_calendar_days: 7-10
+  buffer_percentage: 20
+
+  breakdown:
+    - week_1:
+        focus: "Trial Tracking & Feature Gating (Stories 4.1, 4.2)"
+        deliverables: "Trial users restricted, upgrade prompts shown"
+    - week_2:
+        focus: "Checkout & Subscription Management (Stories 4.3, 4.4, 4.5, 4.6)"
+        deliverables: "Users can upgrade, manage subscriptions, FeetFans course integration"
+
+# Handoff to Epic 5
+handoff:
+  prerequisites:
+    - All Epic 4 stories completed
+    - All quality gates passed
+    - Trial-to-paid conversion functional
+    - Stripe integration working
+
+  outputs_for_epic_5:
+    - Subscription infrastructure for Featured Placement add-on
+    - Payment processing established (can extend for Featured Placement)
+    - Subscription status tracking (can check if user is paid before allowing Featured)
+
+  next_epic: "Epic 5: Featured Placement & Monetization"
+  next_steps:
+    - "Create Epic 5 execution plan"
+    - "Begin Story 5.1: Featured Placement Purchase Flow"

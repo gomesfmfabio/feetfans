@@ -1,0 +1,374 @@
+---
+epic:
+  id: epic-6
+  title: "Safety, Compliance & Launch Readiness"
+  description: "Finalize content moderation mechanisms to prevent policy violations, conduct comprehensive compliance audit covering age verification and data privacy regulations, optimize performance to handle hundreds of concurrent users, configure production monitoring and error tracking, and execute production deployment with health checks and rollback capability."
+  status: pending
+  created_at: 2026-05-03
+  depends_on:
+    - epic-1 # All foundation components
+    - epic-2 # Content management needs moderation
+    - epic-3 # Messaging needs compliance review
+    - epic-4 # Subscription needs legal terms
+    - epic-5 # Featured placement needs monitoring
+
+execution_plan:
+  mode: parallel_waves # Most stories can run in parallel, final deployment sequential
+  parallel_waves: true # Stories 6.1-6.5 can run concurrently, 6.6 waits for all
+
+stories:
+  - id: story-6.1
+    title: "Content Moderation - Automated Filtering"
+    file: docs/stories/6.1-content-moderation-auto.md
+    status: pending
+    assigned_to: dev
+    estimated_hours: 5
+    dependencies:
+      - story-2.1 # Modifies content upload flow
+
+    acceptance_criteria:
+      - Upload extended with moderation checks before saving
+      - Integration with AWS Rekognition, Google Vision, or Sightengine to detect explicit content, CSAM, violence
+      - API returns labels, backend rejects if prohibited detected
+      - Rejected uploads show "Content violates policies. Review guidelines"
+      - Accepted content saved with moderation_labels JSONB
+      - Manual review queue for borderline cases (optional for MVP)
+      - Appeal process via support email
+
+    quality_gates:
+      - type: manual
+        description: "Test content moderation filtering"
+        command: "Upload prohibited content (test images), verify rejection. Upload acceptable content, verify approval"
+      - type: coderabbit
+        description: "Review moderation API integration and rejection logic"
+        command: "coderabbit --prompt-only -t uncommitted"
+      - type: compliance
+        description: "Verify moderation meets US legal requirements"
+        command: "Review moderation provider documentation, ensure CSAM detection enabled"
+
+    outputs:
+      - Content moderation API integrated
+      - Upload flow includes moderation check
+      - Prohibited content rejected
+
+  - id: story-6.2
+    title: "Content Moderation - User Reporting"
+    file: docs/stories/6.2-content-moderation-reporting.md
+    status: pending
+    assigned_to: dev
+    estimated_hours: 3
+    dependencies:
+      - story-2.3 # Adds reporting to feed
+
+    acceptance_criteria:
+      - Report button on content "Report this content"
+      - Modal with reasons (checkboxes) and optional comment
+      - Creates record in content_reports table
+      - Admin dashboard lists pending reports
+      - Admin actions delete content, warn creator, dismiss
+      - Reporter confirmation "Thank you. We'll review within 24h"
+      - No feedback on outcome (privacy)
+
+    quality_gates:
+      - type: manual
+        description: "Test reporting flow"
+        command: "Report content, verify appears in admin dashboard, test admin actions"
+      - type: coderabbit
+        description: "Review reporting logic and admin dashboard"
+        command: "coderabbit --prompt-only -t uncommitted"
+
+    outputs:
+      - Content reporting functional
+      - Admin moderation dashboard
+      - Content_reports table created
+
+  - id: story-6.3
+    title: "Compliance Audit - Age Verification & Data Privacy"
+    file: docs/stories/6.3-compliance-audit.md
+    status: pending
+    assigned_to: qa # or compliance specialist
+    estimated_hours: 6
+    dependencies:
+      - story-1.5 # Age verification implementation
+
+    acceptance_criteria:
+      - Age Verification Audit - Confirm Onfido US-compliant for 18+, test with sample IDs, verify minors blocked, document process
+      - Data Privacy Audit - Review all data collection, GDPR consent or geo-blocking EU, verify encryption (at rest/in transit), create /privacy and /terms pages, add links in footer/signup
+      - Data Retention - Document message TTL (24h), document ID storage duration, implement account deletion flow (GDPR 30 days)
+
+    quality_gates:
+      - type: compliance
+        description: "Legal review of age verification and privacy policies"
+        command: "Legal counsel reviews privacy policy, terms of service, age verification process"
+      - type: manual
+        description: "Test GDPR account deletion flow"
+        command: "Request account deletion, verify data removed within 30 days"
+
+    outputs:
+      - Privacy policy and terms of service pages
+      - Age verification compliance documented
+      - GDPR account deletion flow
+
+  - id: story-6.4
+    title: "Performance Optimization for Scale"
+    file: docs/stories/6.4-performance-optimization.md
+    status: pending
+    assigned_to: dev
+    estimated_hours: 6
+    dependencies:
+      - epic-1 # All components
+      - epic-2 # Feed optimization critical
+      - epic-3 # WebSocket optimization critical
+
+    acceptance_criteria:
+      - Database Optimization - Add indexes on frequently queried columns, EXPLAIN ANALYZE queries optimize N+1, enable Supabase connection pooling
+      - Frontend Performance - Lazy loading for images/videos, code-split routes (<200KB gzipped), Next.js static generation for landing ISR for feed
+      - Caching - Cache feed queries in Redis (30-60s), HTTP caching headers for static assets
+      - Load Testing - k6/Artillery 200 concurrent users, verify API <500ms p95 <1s p99, identify bottlenecks optimize
+      - CDN - Vercel Edge Network for frontend, Supabase Storage CDN for media
+
+    quality_gates:
+      - type: performance
+        description: "Load test with 200 concurrent users"
+        command: "k6 run load-test.js --vus 200 --duration 5m"
+      - type: manual
+        description: "Lighthouse audit"
+        command: "Run Lighthouse on key pages, verify performance score >85"
+      - type: coderabbit
+        description: "Review database queries and caching strategy"
+        command: "coderabbit --prompt-only -t uncommitted"
+
+    outputs:
+      - Database indexes optimized
+      - Frontend performance optimized
+      - Caching strategy implemented
+      - Load test results documented
+
+  - id: story-6.5
+    title: "Monitoring, Logging & Error Tracking"
+    file: docs/stories/6.5-monitoring.md
+    status: pending
+    assigned_to: devops
+    estimated_hours: 5
+    dependencies:
+      - epic-1 # All components to monitor
+
+    acceptance_criteria:
+      - Error Tracking - Sentry in frontend and backend with sourcemaps, error grouping, alerts for critical errors (>10 in 5min)
+      - Logging - Pino structured JSON logs, Logtail/Axiom aggregation, log key events (signup, verification, upload, message, subscription, payment)
+      - Uptime Monitoring - UptimeRobot/BetterStack ping /api/health every 5min, alert on 3 consecutive failures, health check returns 200 OK with DB status version
+      - Analytics (Optional) - PostHog/Plausible page views signups conversions, custom events for key actions
+
+    quality_gates:
+      - type: manual
+        description: "Test error tracking"
+        command: "Trigger error in app, verify appears in Sentry with correct context"
+      - type: manual
+        description: "Test uptime monitoring"
+        command: "Stop server, verify alert received within 15 minutes"
+      - type: coderabbit
+        description: "Review logging implementation and sensitive data handling"
+        command: "coderabbit --prompt-only -t uncommitted"
+
+    outputs:
+      - Sentry error tracking configured
+      - Logging infrastructure deployed
+      - Uptime monitoring active
+      - Analytics (optional)
+
+  - id: story-6.6
+    title: "Production Deployment & Rollback Plan"
+    file: docs/stories/6.6-production-deployment.md
+    status: pending
+    assigned_to: devops
+    estimated_hours: 6
+    dependencies:
+      - story-6.1 # Content moderation must be ready
+      - story-6.3 # Compliance must pass
+      - story-6.4 # Performance must be optimized
+      - story-6.5 # Monitoring must be configured
+
+    acceptance_criteria:
+      - Environment Setup - Prod env vars in Vercel and Railway/Fly.io, Supabase prod migration applied, Stripe prod keys, Onfido prod keys
+      - Deployment - Frontend to Vercel with custom domain (HTTPS), backend to Railway/Fly.io with health check, WebSocket server deployed and tested, DNS configured
+      - Smoke Testing - Checklist landing loads signup works upload works feed works messaging works AI agent works upgrade works featured works
+      - Rollback Plan - Document rollback (Vercel revert Railway rollback), keep previous deployment active 24h, backup prod DB before deployment
+      - Launch Checklist - Review monitoring dashboards, designate on-call developer (48h), configure support email, marketing announcement ready
+
+    quality_gates:
+      - type: deployment
+        description: "Smoke test all critical flows in production"
+        command: "Run through smoke test checklist, verify all features working"
+      - type: security
+        description: "SSL/TLS configured correctly"
+        command: "Verify HTTPS enforced, check SSL Labs rating (A or higher)"
+      - type: manual
+        description: "Rollback procedure tested"
+        command: "Practice rollback in staging environment"
+
+    outputs:
+      - Production environment deployed
+      - Smoke tests passed
+      - Rollback plan documented and tested
+      - Launch checklist completed
+
+  - id: story-6.7
+    title: "Admin Dashboard (Internal Operations Tool)"
+    file: docs/stories/6.7-admin-dashboard.md
+    status: pending
+    assigned_to: dev
+    estimated_hours: 8
+    dependencies:
+      - epic-1 # User management
+      - epic-2 # Content moderation
+      - epic-3 # AI agent management
+      - epic-4 # Subscription management
+
+    acceptance_criteria:
+      - User Management - Admin page at /admin (admin role only), view all users table with filters, search by email/nickname/ID, manually grant free_feetfans status, view user details, ban/unban accounts
+      - Content Moderation - View pending content reports, take action (delete warn dismiss), view moderation history, search content
+      - AI Agent Management - View 15 AI personas, edit personas without code deploy, enable/disable agents, manually trigger AI message, view agent assignment schedule
+      - Analytics Dashboard - Display key metrics (total users, active subscriptions MRR, total content, total messages, AI agent cost, featured placements), date range filter, export CSV (optional)
+      - Access Control - Admin role in users table (is_admin), middleware restricts /admin routes, seed script creates initial admin
+      - Audit Logging - Admin actions logged to admin_audit_log table, audit log viewable in dashboard
+
+    quality_gates:
+      - type: manual
+        description: "Test admin dashboard functionality"
+        command: "Log in as admin, test user management, content moderation, AI agent management, analytics"
+      - type: coderabbit
+        description: "Review admin dashboard access control and audit logging"
+        command: "coderabbit --prompt-only -t uncommitted"
+      - type: security
+        description: "Verify admin dashboard security"
+        command: "Attempt to access /admin as non-admin, verify blocked"
+
+    outputs:
+      - Admin dashboard functional
+      - User management working
+      - Content moderation tools
+      - AI agent management
+      - Analytics dashboard
+      - Audit logging
+
+# Epic-Level Quality Gates
+epic_quality_gates:
+  - type: integration
+    description: "Verify complete Epic 6 integration"
+    checklist:
+      - Content moderation blocks prohibited uploads
+      - User reporting works and admin can action reports
+      - Compliance audit passed (age verification, privacy)
+      - Performance targets met (200 concurrent users, <500ms p95)
+      - Monitoring and error tracking configured
+      - Production deployment successful
+      - Admin dashboard operational
+
+  - type: coderabbit
+    description: "Full Epic 6 architecture review"
+    command: "coderabbit --prompt-only --base main"
+    focus:
+      - Content moderation effectiveness
+      - Compliance with legal requirements
+      - Performance optimization techniques
+      - Security hardening for production
+
+  - type: launch_readiness
+    description: "Launch readiness checklist"
+    checklist:
+      - All epics (1-6) completed
+      - All quality gates passed
+      - Legal review completed (privacy, terms, age verification)
+      - Performance validated (load tests passed)
+      - Monitoring dashboards configured
+      - Support processes documented
+      - Marketing materials ready
+      - Go/no-go decision made
+
+# Success Criteria
+success_criteria:
+  - All 7 stories completed with acceptance criteria met
+  - All quality gates passed
+  - Content moderation prevents policy violations
+  - Compliance audit confirms legal adherence
+  - Performance supports 100s of concurrent users
+  - Monitoring provides visibility into system health
+  - Production deployment successful with rollback plan
+  - Admin dashboard enables operations management
+  - FeetFans marketplace is production-ready
+
+# Risk Mitigation
+risks:
+  - risk: "Content moderation API costs too high at scale"
+    mitigation: "Monitor costs closely, negotiate volume pricing, consider switching providers if needed"
+    owner: dev
+
+  - risk: "Legal compliance gaps discovered late"
+    mitigation: "Legal counsel review early (Story 6.3), budget for compliance fixes, delay launch if needed"
+    owner: pm
+
+  - risk: "Performance issues in production despite load testing"
+    mitigation: "Monitor closely post-launch, have scaling plan ready, prioritize performance fixes"
+    owner: dev
+
+  - risk: "Production deployment fails"
+    mitigation: "Thorough testing in staging, documented rollback plan, deploy during low-traffic window"
+    owner: devops
+
+  - risk: "Admin dashboard access compromised"
+    mitigation: "Strong authentication (2FA for admins), audit logging, IP whitelist (optional)"
+    owner: devops
+
+# Estimated Timeline
+timeline:
+  estimated_total_hours: 39
+  estimated_calendar_days: 10-14
+  buffer_percentage: 25 # Higher buffer for launch-critical work
+
+  breakdown:
+    - week_1:
+        focus: "Safety & Compliance (Stories 6.1, 6.2, 6.3)"
+        deliverables: "Content moderation functional, compliance audit passed"
+    - week_2:
+        focus: "Performance & Monitoring (Stories 6.4, 6.5, 6.7)"
+        deliverables: "System optimized, monitoring configured, admin dashboard ready"
+    - week_3:
+        focus: "Production Deployment (Story 6.6)"
+        deliverables: "FeetFans marketplace live in production"
+
+# Launch Readiness
+launch_readiness:
+  go_no_go_criteria:
+    - All acceptance criteria met across Epics 1-6
+    - All quality gates passed
+    - Legal compliance validated
+    - Performance targets achieved
+    - Monitoring and error tracking operational
+    - Support processes documented
+    - Rollback plan tested
+    - Marketing ready
+
+  launch_day_checklist:
+    - Final smoke test in production
+    - Monitor error rates (Sentry)
+    - Monitor uptime (UptimeRobot)
+    - Monitor performance (Lighthouse)
+    - On-call developer available
+    - Support email monitored
+    - Marketing announcement published
+    - Social media posts scheduled
+
+  post_launch_monitoring:
+    - Week 1: Daily checks of error rates, uptime, performance
+    - Week 2: Monitor user feedback, fix critical bugs
+    - Week 3: Analyze usage patterns, optimize bottlenecks
+    - Week 4: Review analytics, plan Epic 7 (growth features)
+
+# Handoff to Post-MVP
+handoff:
+  next_steps:
+    - Monitor production metrics (users, revenue, errors)
+    - Gather user feedback (creators and consumers)
+    - Prioritize bug fixes and quick wins
+    - Plan Epic 7: Consumer Marketing & Growth
+    - Plan Epic 8: Advanced Features (in-app payments, notifications, etc.)

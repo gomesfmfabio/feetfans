@@ -1,0 +1,1 @@
+/Users/martinez/pegasus/squads/squad-creator-pro/agents/squad-chief.md

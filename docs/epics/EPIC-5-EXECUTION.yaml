@@ -1,0 +1,234 @@
+---
+epic:
+  id: epic-5
+  title: "Featured Placement & Monetization"
+  description: "Implement Featured Placement as an additional revenue stream allowing creators to pay for increased visibility through privileged positioning in feeds and searches, with support for both one-time and recurring payment options, expiration tracking, and visual indicators of featured status."
+  status: pending
+  created_at: 2026-05-03
+  depends_on:
+    - epic-2 # Requires feed and discovery features to boost visibility
+    - epic-4 # Requires payment infrastructure (Stripe)
+
+execution_plan:
+  mode: sequential # Purchase flow must be ready before positioning logic
+  parallel_waves: false # Stories build on each other
+
+stories:
+  - id: story-5.1
+    title: "Featured Placement Purchase Flow"
+    file: docs/stories/5.1-featured-purchase.md
+    status: pending
+    assigned_to: dev
+    estimated_hours: 5
+    dependencies:
+      - story-4.3 # Requires Stripe integration
+
+    acceptance_criteria:
+      - Database featured_placements table (id, creator_id, tier, purchased_at, expires_at, payment_type, stripe_payment_id)
+      - /featured page for paid creators (trial users see upgrade prompt)
+      - Pricing options displayed - Standard Featured (7 days $19 one-time), Premium Featured (30 days $59 one-time or $49/month recurring)
+      - Payment processed via Stripe (US/international credit cards)
+      - On success, record created with expires_at = purchased_at + duration
+      - User redirected with success message "You're now featured!"
+      - Error handling for payment failures
+
+    quality_gates:
+      - type: manual
+        description: "Test featured placement purchase"
+        command: "Purchase featured placement (test mode), verify record in database and expiration date"
+      - type: coderabbit
+        description: "Review payment flow and pricing logic"
+        command: "coderabbit --prompt-only -t uncommitted"
+      - type: security
+        description: "Verify payment security (Stripe handles sensitive data)"
+        command: "Audit payment form, ensure no credit card data stored locally"
+
+    outputs:
+      - Featured placements table created
+      - Featured placement purchase page
+      - Stripe payment integration for Featured
+
+  - id: story-5.2
+    title: "Featured Placement Privileged Positioning"
+    file: docs/stories/5.2-featured-positioning.md
+    status: pending
+    assigned_to: dev
+    estimated_hours: 4
+    dependencies:
+      - story-5.1 # Requires featured_placements table
+      - story-2.3 # Modifies feed query
+      - story-2.6 # Modifies discovery query
+
+    acceptance_criteria:
+      - Feed query modified ORDER BY featured_placement (active), then created_at DESC
+      - Discovery swipe prioritizes featured creators
+      - Featured creators have "Featured" badge (crown icon or similar)
+      - Featured status based on active record (expires_at > NOW())
+      - Cron job expires featured placements daily (set expires_at < NOW())
+
+    quality_gates:
+      - type: manual
+        description: "Test featured positioning in feed and discovery"
+        command: "Purchase featured, verify appears at top of feed and prioritized in discovery"
+      - type: coderabbit
+        description: "Review query modifications and featured badge UI"
+        command: "coderabbit --prompt-only -t uncommitted"
+      - type: performance
+        description: "Verify feed query performance with featured sorting"
+        command: "Load test feed with 1000+ creators, measure query time"
+
+    outputs:
+      - Featured creators prioritized in feed
+      - Featured badge displayed
+      - Cron job expires featured placements
+
+  - id: story-5.3
+    title: "Featured Placement Expiration & Renewal"
+    file: docs/stories/5.3-featured-renewal.md
+    status: pending
+    assigned_to: dev
+    estimated_hours: 3
+    dependencies:
+      - story-5.2 # Requires featured positioning logic
+
+    acceptance_criteria:
+      - Profile shows "Featured until [date]" or "Not featured"
+      - Banner if expires in <3 days "Featured expires soon - renew now!"
+      - Renew button navigates to /featured pre-filled with current tier
+      - Recurring Premium auto-renews via Stripe subscription
+      - One-time requires manual repurchase
+      - Email notification 2 days before expiration (optional for MVP)
+      - Expired creators revert to normal positioning
+
+    quality_gates:
+      - type: manual
+        description: "Test featured renewal flow"
+        command: "Wait for featured to expire, verify reverts to normal positioning, test renewal"
+      - type: coderabbit
+        description: "Review expiration logic and renewal flow"
+        command: "coderabbit --prompt-only -t uncommitted"
+
+    outputs:
+      - Featured status displayed on profile
+      - Renewal flow functional
+      - Expiration notifications (optional)
+
+  - id: story-5.4
+    title: "Featured Placement Analytics (Optional)"
+    file: docs/stories/5.4-featured-analytics.md
+    status: pending
+    assigned_to: dev
+    estimated_hours: 4
+    dependencies:
+      - story-5.2 # Requires featured positioning
+
+    acceptance_criteria:
+      - Database analytics_events table (id, user_id, event_type, metadata, created_at)
+      - Track profile views (event_type = 'profile_view')
+      - Track message starts (event_type = 'message_start')
+      - Featured creators see "During featured X views, Y conversations"
+      - Compare to baseline "3x more views than average"
+      - Daily aggregation for chart (optional - table for MVP)
+
+    quality_gates:
+      - type: manual
+        description: "Test analytics tracking"
+        command: "View featured creator profile, verify analytics event logged"
+      - type: coderabbit
+        description: "Review analytics tracking logic"
+        command: "coderabbit --prompt-only -t uncommitted"
+
+    outputs:
+      - Analytics events table created
+      - Profile views and message starts tracked
+      - Featured analytics dashboard (basic)
+
+# Epic-Level Quality Gates
+epic_quality_gates:
+  - type: integration
+    description: "Verify complete Epic 5 integration"
+    checklist:
+      - Creators can purchase Featured Placement
+      - Featured creators appear at top of feed
+      - Featured creators prioritized in discovery
+      - Featured badge displayed correctly
+      - Featured placement expires correctly
+      - Renewal flow works for one-time and recurring
+      - Analytics track views and messages (if implemented)
+
+  - type: coderabbit
+    description: "Full Epic 5 architecture review"
+    command: "coderabbit --prompt-only --base main"
+    focus:
+      - Payment security (Stripe integration)
+      - Query optimization (featured sorting in feed)
+      - Expiration logic (cron job, edge cases)
+      - Analytics tracking (privacy, GDPR compliance)
+
+  - type: revenue
+    description: "Revenue tracking validation"
+    checklist:
+      - Stripe dashboard shows Featured Placement purchases
+      - Revenue attributed correctly (one-time vs recurring)
+      - Refund process documented
+      - Admin tools to manually grant/revoke featured status
+
+# Success Criteria
+success_criteria:
+  - All 4 stories completed with acceptance criteria met (Story 5.4 optional)
+  - All quality gates passed
+  - Creators can purchase Featured Placement
+  - Featured creators have increased visibility
+  - Featured placement expires and renews correctly
+  - Payment processing secure and reliable
+  - Analytics provide ROI insights for creators (if implemented)
+
+# Risk Mitigation
+risks:
+  - risk: "Featured placement doesn't drive meaningful value for creators"
+    mitigation: "Track analytics (views, messages), A/B test pricing tiers, gather creator feedback"
+    owner: dev
+
+  - risk: "Too many featured creators dilute value"
+    mitigation: "Limit featured slots (e.g., max 10% of creators), increase pricing if demand high"
+    owner: pm
+
+  - risk: "Recurring payments fail, creators lose featured status unexpectedly"
+    mitigation: "Grace period (3 days), email notifications, clear messaging on payment failure"
+    owner: dev
+
+  - risk: "Expiration cron job has timing issues"
+    mitigation: "Run cron hourly (not daily) for more precise expiration, test edge cases"
+    owner: dev
+
+# Estimated Timeline
+timeline:
+  estimated_total_hours: 16 # 12h if Story 5.4 skipped
+  estimated_calendar_days: 5-7
+  buffer_percentage: 15
+
+  breakdown:
+    - week_1:
+        focus: "Featured Purchase & Positioning (Stories 5.1, 5.2, 5.3)"
+        deliverables: "Creators can purchase and benefit from featured placement"
+    - week_2 (optional):
+        focus: "Analytics (Story 5.4)"
+        deliverables: "Creators see analytics for featured period"
+
+# Handoff to Epic 6
+handoff:
+  prerequisites:
+    - All Epic 5 stories completed
+    - All quality gates passed
+    - Featured placement functional
+    - Payment processing working
+
+  outputs_for_epic_6:
+    - Additional revenue stream established
+    - Premium features infrastructure (can extend for other paid features)
+    - Creator engagement data (which creators pay for featured)
+
+  next_epic: "Epic 6: Safety, Compliance & Launch Readiness"
+  next_steps:
+    - "Create Epic 6 execution plan"
+    - "Begin Story 6.1: Content Moderation - Automated Filtering"

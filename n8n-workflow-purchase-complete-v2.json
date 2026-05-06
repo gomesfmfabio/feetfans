@@ -1,0 +1,92 @@
+{
+  "name": "Hotmart - Purchase Complete (FeetFans)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "hotmart-purchase-complete",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "name": "Webhook Hotmart Purchase",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "hotmart-purchase-complete"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = items[0].json;\nconst payload = input.body;\n\n// Extrair dados do comprador\nconst phone = payload.data.buyer.checkout_phone || '';\n\n// Formatar telefone para WhatsApp\nconst formattedPhone = phone.replace(/\\D/g, '') + '@c.us';\n\nreturn [{\n  json: {\n    name: payload.data.buyer.name || 'Customer',\n    email: payload.data.buyer.email || '',\n    phone: formattedPhone,\n    product: payload.data.product.name || '',\n    price: payload.data.purchase.price.value || 0\n  }\n}];"
+      },
+      "name": "Extract Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://waha.feetstars.online/api/sendText",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "session",
+              "value": "default"
+            },
+            {
+              "name": "chatId",
+              "value": "={{ $json.phone }}"
+            },
+            {
+              "name": "text",
+              "value": "🇺🇸 Congratulations, your FeetFans purchase is almost complete! After watching the video that appeared, open your email and look for \"Hotmart\". Open only the most recent email. Then, just follow the instructions in that email to access the members area 😃\n\n🇪🇸 ¡Felicidades! Tu compra en FeetFans está casi completa. Después de ver el video, abre tu correo electrónico y busca \"Hotmart\". Abre solo el correo más reciente. Luego, sigue las instrucciones para acceder al área de miembros 😃"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Send WhatsApp Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "waha-api-key",
+          "name": "WAHA API Key"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Hotmart Purchase": {
+      "main": [
+        [
+          {
+            "node": "Extract Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Data": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "2",
+  "id": "hotmart-purchase-complete-v2"
+}

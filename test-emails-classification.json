@@ -1,0 +1,95 @@
+{
+  "test_cases": [
+    {
+      "id": 1,
+      "category_expected": "ACCESS_REQUEST",
+      "language_expected": "pt",
+      "subject": "Preciso de acesso ao produto",
+      "body": "Olá, comprei o FeetFans mas não recebi o login e senha para acessar. Pode me ajudar?"
+    },
+    {
+      "id": 2,
+      "category_expected": "ACCESS_REQUEST",
+      "language_expected": "en",
+      "subject": "Need access to the product",
+      "body": "Hi, I purchased FeetFans but didn't receive my login credentials. Can you help?"
+    },
+    {
+      "id": 3,
+      "category_expected": "ACCESS_REQUEST",
+      "language_expected": "es",
+      "subject": "Necesito acceso al producto",
+      "body": "Hola, compré FeetFans pero no recibí mi usuario y contraseña. ¿Pueden ayudarme?"
+    },
+    {
+      "id": 4,
+      "category_expected": "TECHNICAL_SUPPORT",
+      "language_expected": "pt",
+      "subject": "Dúvida sobre como usar a plataforma",
+      "body": "Olá, estou com dúvida sobre como criar meu perfil. O tutorial não está funcionando."
+    },
+    {
+      "id": 5,
+      "category_expected": "TECHNICAL_SUPPORT",
+      "language_expected": "en",
+      "subject": "Error when trying to upload content",
+      "body": "Hello, I'm getting an error message when trying to upload my first content. The platform doesn't work."
+    },
+    {
+      "id": 6,
+      "category_expected": "TECHNICAL_SUPPORT",
+      "language_expected": "es",
+      "subject": "Ayuda con la plataforma",
+      "body": "Hola, necesito ayuda para entender cómo funciona el sistema de monetización. No consigo configurarlo."
+    },
+    {
+      "id": 7,
+      "category_expected": "REFUND_THREAT",
+      "language_expected": "pt",
+      "subject": "Quero meu dinheiro de volta",
+      "body": "Este produto é uma fraude! Vou denunciar ao meu banco e fazer chargeback no cartão de crédito se não me devolverem o dinheiro AGORA!"
+    },
+    {
+      "id": 8,
+      "category_expected": "REFUND_THREAT",
+      "language_expected": "en",
+      "subject": "Refund or I will dispute",
+      "body": "I want my money back! This is a scam. If you don't refund me immediately, I will file a dispute with my credit card company."
+    },
+    {
+      "id": 9,
+      "category_expected": "REFUND_THREAT",
+      "language_expected": "es",
+      "subject": "Quiero mi reembolso",
+      "body": "Esto es un fraude. Voy a reclamar con mi tarjeta de crédito y hacer un chargeback si no me devuelven el dinero."
+    },
+    {
+      "id": 10,
+      "category_expected": "REFUND_IGNORE",
+      "language_expected": "pt",
+      "subject": "Solicitação de reembolso",
+      "body": "Olá, gostaria de solicitar reembolso pois o produto não atendeu minhas expectativas. Aguardo retorno."
+    },
+    {
+      "id": 11,
+      "category_expected": "REFUND_IGNORE",
+      "language_expected": "en",
+      "subject": "Refund request",
+      "body": "Hello, I would like to request a refund as the product didn't meet my expectations. Thank you."
+    },
+    {
+      "id": 12,
+      "category_expected": "REFUND_IGNORE",
+      "language_expected": "es",
+      "subject": "Solicitud de devolución",
+      "body": "Hola, me gustaría solicitar una devolución porque el producto no cumplió mis expectativas. Gracias."
+    },
+    {
+      "id": 13,
+      "category_expected": "IGNORE",
+      "language_expected": "en",
+      "subject": "Partnership opportunity",
+      "body": "Hi, I would like to discuss a partnership opportunity with your company. Let me know if you're interested."
+    }
+  ]
+}

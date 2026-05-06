@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MRA FeetFans — Transform Manual Selling Into Automated Revenue</title>
+  <meta name="description" content="Master Facebook Ads and AI automation to scale the strategies you learned in FeetFans.">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+
+  <style>
+    /* ===== PREMIUM THEME: MIDNIGHT VIOLET ===== */
+    :root {
+      /* Backgrounds */
+      --premium-bg-primary: #0D0B1A;
+      --premium-bg-secondary: #13102B;
+      --premium-bg-tertiary: #1A1535;
+
+      /* Accent */
+      --premium-accent: #A855F7;
+      --premium-accent-secondary: #9333EA;
+      --premium-accent-soft: #7C3AED;
+      --premium-accent-hover: #C084FC;
+
+      /* Text */
+      --premium-text: #F5F0FF;
+      --premium-text-secondary: #B8A8D4;
+      --premium-text-muted: #7A6B99;
+
+      /* Typography */
+      --premium-font-heading: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+      --premium-font-body: 'Inter', 'SF Pro Text', system-ui, sans-serif;
+      --premium-font-label: 'JetBrains Mono', monospace;
+      --premium-font-weight-heading: 700;
+      --premium-font-weight-body: 400;
+
+      /* Effects */
+      --premium-glow-color: rgba(168, 85, 247, 0.4);
+      --premium-glow-spread: 0 0 45px;
+      --premium-glass-bg: rgba(168, 85, 247, 0.06);
+      --premium-glass-border: rgba(168, 85, 247, 0.15);
+      --premium-glass-blur: 18px;
+      --premium-gradient-hero: radial-gradient(ellipse at 50% 0%, rgba(168, 85, 247, 0.15) 0%, transparent 70%);
+      --premium-gradient-section: linear-gradient(180deg, #0D0B1A 0%, #13102B 100%);
+      --premium-gradient-text: linear-gradient(135deg, #A855F7, #C084FC);
+
+      /* Spacing */
+      --premium-section-padding: 80px;
+      --premium-hero-padding: 120px;
+      --premium-card-padding: 32px;
+      --premium-gap: 24px;
+      --premium-radius: 16px;
+      --premium-radius-sm: 8px;
+
+      /* Transitions */
+      --premium-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ===== BASE RESET ===== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--premium-font-body);
+      font-weight: var(--premium-font-weight-body);
+      color: var(--premium-text);
+      background: var(--premium-bg-primary);
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+
+    /* ===== TYPOGRAPHY ===== */
+    h1, h2, h3, h4, h5, h6 {
+      font-family: var(--premium-font-heading);
+      font-weight: var(--premium-font-weight-heading);
+      letter-spacing: -0.045em;
+      line-height: 0.92;
+      color: var(--premium-text);
+    }
+
+    h1 { font-size: clamp(2.5rem, 6vw, 4.5rem); }
+    h2 { font-size: clamp(2rem, 5vw, 3.5rem); }
+    h3 { font-size: clamp(1.5rem, 3vw, 2rem); }
+
+    p {
+      color: var(--premium-text-secondary);
+      font-size: 1.125rem;
+      line-height: 1.7;
+    }
+
+    a {
+      color: var(--premium-accent);
+      text-decoration: none;
+      transition: var(--premium-transition);
+    }
+
+    a:hover {
+      color: var(--premium-accent-hover);
+    }
+
+    /* ===== ENHANCED TIER: GRAIN TEXTURE ===== */
+    .grain {
+      position: fixed;
+      inset: 0;
+      z-index: 9990;
+      pointer-events: none;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 200px;
+      animation: grain-shift 0.5s steps(4) infinite;
+    }
+
+    @keyframes grain-shift {
+      0% { background-position: 0 0; }
+      25% { background-position: -80px 40px; }
+      50% { background-position: 40px -60px; }
+      75% { background-position: -40px 80px; }
+    }
+
+    /* ===== ENHANCED TIER: SCROLL PROGRESS BAR ===== */
+    .scroll-progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 9998;
+      height: 2px;
+      width: 0%;
+      background: linear-gradient(90deg, var(--premium-accent), var(--premium-accent-soft));
+    }
+
+    /* ===== LAYOUT ===== */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    section {
+      padding: var(--premium-section-padding) 0;
+      position: relative;
+    }
+
+    /* ===== NAV ===== */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 9000;
+      background: rgba(13, 11, 26, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--premium-glass-border);
+      padding: 20px 0;
+    }
+
+    nav .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-family: var(--premium-font-heading);
+      font-size: 1.25rem;
+      font-weight: 700;
+      background: var(--premium-gradient-text);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 0.9rem;
+      color: var(--premium-text-secondary);
+      transition: var(--premium-transition);
+    }
+
+    .nav-links a:hover {
+      color: var(--premium-accent);
+    }
+
+    /* ===== HERO ===== */
+    #hero {
+      padding: calc(var(--premium-hero-padding) + 60px) 0 var(--premium-hero-padding);
+      background: var(--premium-gradient-hero);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-content {
+      text-align: center;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .hero-headline {
+      margin-bottom: 24px;
+      background: var(--premium-gradient-text);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-subheadline {
+      font-size: 1.25rem;
+      color: var(--premium-text-secondary);
+      margin-bottom: 48px;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .hero-cta {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      display: inline-block;
+      padding: 16px 40px;
+      border-radius: var(--premium-radius-sm);
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      border: none;
+      transition: var(--premium-transition);
+      text-align: center;
+    }
+
+    .btn-primary {
+      background: var(--premium-accent);
+      color: #0D0B1A;
+      box-shadow: var(--premium-glow-spread) var(--premium-glow-color);
+    }
+
+    .btn-primary:hover {
+      background: var(--premium-accent-hover);
+      box-shadow: 0 0 60px var(--premium-glow-color);
+      transform: scale(1.02);
+      color: #0D0B1A;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--premium-accent);
+      border: 1px solid var(--premium-accent);
+    }
+
+    .btn-secondary:hover {
+      background: var(--premium-glass-bg);
+      border-color: var(--premium-accent-hover);
+      color: var(--premium-accent-hover);
+    }
+
+    /* ===== SECTION EYEBROW ===== */
+    .eyebrow {
+      font-family: var(--premium-font-label);
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--premium-text-muted);
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .eyebrow-number {
+      color: var(--premium-accent);
+      margin-right: 12px;
+    }
+
+    /* ===== EXPERTISE SECTION ===== */
+    #expertise {
+      background: var(--premium-gradient-section);
+    }
+
+    .section-header {
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto 64px;
+    }
+
+    .section-title {
+      margin-bottom: 16px;
+    }
+
+    .section-description {
+      font-size: 1.125rem;
+      color: var(--premium-text-secondary);
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--premium-glass-bg);
+      backdrop-filter: blur(var(--premium-glass-blur));
+      -webkit-backdrop-filter: blur(var(--premium-glass-blur));
+      border: 1px solid var(--premium-glass-border);
+      border-radius: var(--premium-radius);
+      padding: var(--premium-card-padding);
+      transition: var(--premium-transition);
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: var(--premium-accent);
+      box-shadow: 0 8px 32px rgba(168, 85, 247, 0.2);
+    }
+
+    .card-title {
+      font-size: 1.5rem;
+      margin-bottom: 16px;
+      color: var(--premium-text);
+    }
+
+    .card-description {
+      color: var(--premium-text-secondary);
+      line-height: 1.7;
+    }
+
+    /* ===== STACK SECTION ===== */
+    #stack {
+      background: var(--premium-bg-primary);
+    }
+
+    .stack-list {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .stack-item {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      padding: 28px 0;
+      border-bottom: 1px solid rgba(168, 85, 247, 0.06);
+    }
+
+    .stack-item:last-child {
+      border-bottom: none;
+    }
+
+    .stack-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--premium-accent);
+      margin-top: 8px;
+      flex-shrink: 0;
+      box-shadow: 0 0 12px var(--premium-glow-color);
+    }
+
+    .stack-content h3 {
+      font-size: 1.25rem;
+      margin-bottom: 8px;
+      color: var(--premium-text);
+    }
+
+    .stack-content p {
+      color: var(--premium-text-secondary);
+      font-size: 1rem;
+    }
+
+    /* ===== QUOTE SECTION ===== */
+    #quote {
+      background: var(--premium-gradient-section);
+      text-align: center;
+      padding: 100px 0;
+      position: relative;
+    }
+
+    #quote::before {
+      content: '"';
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 8rem;
+      color: var(--premium-accent);
+      opacity: 0.15;
+      line-height: 1;
+      font-family: var(--premium-font-heading);
+    }
+
+    .quote-text {
+      font-size: 1.75rem;
+      font-style: italic;
+      color: var(--premium-text);
+      max-width: 640px;
+      margin: 0 auto 24px;
+      line-height: 1.5;
+      letter-spacing: -0.02em;
+      position: relative;
+      z-index: 1;
+    }
+
+    .quote-attribution {
+      font-family: var(--premium-font-label);
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--premium-accent);
+    }
+
+    /* ===== CTA FINAL ===== */
+    #cta-final {
+      background: var(--premium-bg-primary);
+      text-align: center;
+      padding: 100px 0;
+    }
+
+    .cta-final-content {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .cta-final-title {
+      margin-bottom: 16px;
+    }
+
+    .cta-final-description {
+      font-size: 1.125rem;
+      color: var(--premium-text-secondary);
+      margin-bottom: 40px;
+    }
+
+    /* ===== FOOTER ===== */
+    footer {
+      background: var(--premium-bg-secondary);
+      padding: 60px 0 40px;
+      border-top: 1px solid var(--premium-glass-border);
+    }
+
+    .footer-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 32px;
+      margin-bottom: 40px;
+    }
+
+    .footer-brand h3 {
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+      background: var(--premium-gradient-text);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .footer-tagline {
+      color: var(--premium-text-muted);
+      font-size: 0.9rem;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+    }
+
+    .footer-links a {
+      color: var(--premium-text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .footer-links a:hover {
+      color: var(--premium-accent);
+    }
+
+    .footer-bottom {
+      text-align: center;
+      padding-top: 32px;
+      border-top: 1px solid rgba(168, 85, 247, 0.06);
+      color: var(--premium-text-muted);
+      font-size: 0.875rem;
+    }
+
+    /* ===== ENHANCED TIER: CINEMATIC REVEALS ===== */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px) scale(0.98);
+      filter: blur(4px);
+      transition: opacity 0.7s ease, transform 0.7s ease, filter 0.7s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      filter: blur(0);
+    }
+
+    .reveal-d1 { transition-delay: 0.1s; }
+    .reveal-d2 { transition-delay: 0.2s; }
+    .reveal-d3 { transition-delay: 0.3s; }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none;
+      }
+
+      .cards-grid {
+        grid-template-columns: 1fr;
+      }
+
+      h1 { font-size: 2.5rem; }
+      h2 { font-size: 2rem; }
+
+      .hero-subheadline {
+        font-size: 1.125rem;
+      }
+
+      .quote-text {
+        font-size: 1.375rem;
+      }
+
+      section {
+        padding: 60px 0;
+      }
+
+      #hero {
+        padding: calc(60px + 60px) 0 60px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Enhanced Tier: Grain Texture -->
+  <div class="grain"></div>
+
+  <!-- Enhanced Tier: Scroll Progress Bar -->
+  <div class="scroll-progress"></div>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="container">
+      <div class="logo">MRA FeetFans</div>
+      <ul class="nav-links">
+        <li><a href="#hero">Overview</a></li>
+        <li><a href="#expertise">Method</a></li>
+        <li><a href="#stack">Tools</a></li>
+        <li><a href="#cta-final">Access</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section id="hero">
+    <div class="container">
+      <div class="hero-content">
+        <h1 class="hero-headline">Transform Manual Selling Into Automated Revenue</h1>
+        <p style="font-family: var(--premium-font-label); font-size: 0.875rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--premium-accent); margin-bottom: 16px;">MRA — Monetization &amp; Revenue Amplification</p>
+        <p class="hero-subheadline">Master Facebook Ads and AI automation to scale the strategies you learned in FeetFans. Built for creators who value leverage over labor.</p>
+        <div class="hero-cta">
+          <a href="https://pay.hotmart.com/V67508899G?off=um8m768l" class="btn btn-primary">Enjoy MRA FeetFans</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Expertise Section -->
+  <section id="expertise">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="eyebrow"><span class="eyebrow-number">01</span>The Method</span>
+        <h2 class="section-title">Three Pillars of Automated Selling</h2>
+        <p class="section-description">A systematic approach to scaling your foot content business through proven advertising strategies and intelligent automation.</p>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card reveal reveal-d1">
+          <h3 class="card-title">Facebook Ads Mastery</h3>
+          <p class="card-description">Learn to create, launch, and optimize campaigns that convert. Understand audience targeting, creative testing, and budget allocation strategies designed specifically for digital content creators.</p>
+        </div>
+
+        <div class="card reveal reveal-d2">
+          <h3 class="card-title">AI-Powered Automation</h3>
+          <p class="card-description">Deploy intelligent tools that handle repetitive tasks, optimize your workflow, and scale your operations. Build systems that work while you focus on strategic growth.</p>
+        </div>
+
+        <div class="card reveal reveal-d3">
+          <h3 class="card-title">Strategic Account Setup</h3>
+          <p class="card-description">Configure your advertising accounts for compliance and longevity. Understand platform policies, risk management, and the technical foundation required for sustainable growth.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stack Section -->
+  <section id="stack">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="eyebrow"><span class="eyebrow-number">02</span>Tools & Technologies</span>
+        <h2 class="section-title">Your Automation Arsenal</h2>
+        <p class="section-description">The ecosystem you'll master to build scalable revenue systems</p>
+      </div>
+
+      <div class="stack-list">
+        <div class="stack-item reveal reveal-d1">
+          <div class="stack-dot"></div>
+          <div class="stack-content">
+            <h3>Facebook Ads Manager</h3>
+            <p>Campaign creation, optimization, and performance analytics</p>
+          </div>
+        </div>
+
+        <div class="stack-item reveal reveal-d2">
+          <div class="stack-dot"></div>
+          <div class="stack-content">
+            <h3>AI Automation Tools</h3>
+            <p>Workflow optimization and intelligent content distribution</p>
+          </div>
+        </div>
+
+        <div class="stack-item reveal reveal-d3">
+          <div class="stack-dot"></div>
+          <div class="stack-content">
+            <h3>Analytics Platforms</h3>
+            <p>Data tracking and conversion measurement systems</p>
+          </div>
+        </div>
+
+        <div class="stack-item reveal">
+          <div class="stack-dot"></div>
+          <div class="stack-content">
+            <h3>Compliance Systems</h3>
+            <p>Account protection and policy adherence frameworks</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quote Section -->
+  <section id="quote">
+    <div class="container">
+      <p class="quote-text">Intelligence replaces effort. Systems replace uncertainty. Automation replaces manual labor.</p>
+      <p class="quote-attribution">The FeetFans Method</p>
+    </div>
+  </section>
+
+  <!-- CTA Final Section -->
+  <section id="cta-final">
+    <div class="container">
+      <div class="cta-final-content reveal">
+        <span class="eyebrow"><span class="eyebrow-number">03</span>Ready to Scale</span>
+        <h2 class="cta-final-title">Build Your Automated Revenue System</h2>
+        <p class="cta-final-description">Join creators who've moved beyond manual selling into systematic, scalable growth. Access the complete method today.</p>
+        <a href="https://pay.hotmart.com/V67508899G?off=um8m768l" class="btn btn-primary">Enjoy MRA FeetFans</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <h3>MRA FeetFans</h3>
+          <p class="footer-tagline">Scale with automation. Sell with intelligence.</p>
+        </div>
+        <ul class="footer-links">
+          <li><a href="#">Privacy</a></li>
+          <li><a href="#">Terms</a></li>
+        </ul>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 MRA FeetFans. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Enhanced Tier: Scroll Reveals JavaScript -->
+  <script>
+    // Scroll Progress Bar
+    window.addEventListener('scroll', () => {
+      const scrollPct = (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100;
+      document.querySelector('.scroll-progress').style.width = scrollPct + '%';
+    });
+
+    // Cinematic Scroll Reveals
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+  </script>
+
+</body>
+</html>

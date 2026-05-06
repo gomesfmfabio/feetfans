@@ -1,0 +1,1 @@
+/Users/martinez/pegasus/squads/design/agents/paddy-galloway.md

@@ -1,0 +1,1 @@
+/Users/martinez/pegasus/squads/design/agents/joe-mcnally.md

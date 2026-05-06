@@ -1,0 +1,290 @@
+---
+epic:
+  id: epic-2
+  title: "Content Management & Feed"
+  description: "Enable creators to upload, categorize, and manage photos/videos while allowing consumers to discover content through an infinite scroll feed and Happn-style swipe discovery interface."
+  status: pending
+  created_at: 2026-05-03
+  depends_on:
+    - epic-1 # Requires authentication, database, storage infrastructure
+
+execution_plan:
+  mode: sequential # Stories 2.1-2.2 must complete before 2.3-2.6 (need content first)
+  parallel_waves: true # Stories 2.3, 2.4, 2.5, 2.6 can be parallelized after 2.1-2.2
+
+stories:
+  - id: story-2.1
+    title: "Content Upload with Category Tagging"
+    file: docs/stories/2.1-content-upload.md
+    status: pending
+    assigned_to: dev
+    estimated_hours: 5
+    dependencies:
+      - story-1.3 # Requires Supabase Storage
+      - story-1.4 # Requires authentication
+
+    acceptance_criteria:
+      - Database schema extended with content table (id, creator_id, file_url, file_type, categories, created_at)
+      - Upload page at /upload (creators with age_verified=true only)
+      - File upload component accepts photos (JPEG/PNG) and videos (MP4/MOV), max 50MB
+      - Category selection UI with 10-15 predefined categories
+      - Files stored in Supabase Storage with public read access
+      - Upload form creates record in content table
+      - Success toast and redirect to My Content gallery
+
+    quality_gates:
+      - type: manual
+        description: "Test content upload end-to-end"
+        command: "Upload photo and video, verify in Supabase Storage and content table"
+      - type: coderabbit
+        description: "Review file upload security and validation"
+        command: "coderabbit --prompt-only -t uncommitted"
+
+    outputs:
+      - Content upload page functional
+      - Supabase Storage bucket for content
+      - Content table with category tagging
+
+  - id: story-2.2
+    title: "Creator Content Gallery (My Content)"
+    file: docs/stories/2.2-creator-gallery.md
+    status: pending
+    assigned_to: dev
+    estimated_hours: 3
+    dependencies:
+      - story-2.1 # Requires content table and uploaded content
+
+    acceptance_criteria:
+      - My Content page at /my-content (creators only)
+      - Grid layout (2 cols mobile, 3-4 cols desktop)
+      - Each item shows thumbnail, category tags, upload date
+      - Delete button with confirmation modal
+      - Delete action removes from content table and Supabase Storage
+      - Empty state if no content
+      - Pagination or infinite scroll for >20 items
+
+    quality_gates:
+      - type: manual
+        description: "Test content gallery and deletion"
+        command: "Upload content, view in gallery, delete item, verify removed from storage"
+      - type: coderabbit
+        description: "Review gallery layout and delete logic"
+        command: "coderabbit --prompt-only -t uncommitted"
+
+    outputs:
+      - Content gallery page functional
+      - Delete content functionality working
+
+  - id: story-2.3
+    title: "Infinite Scroll Feed for Content Discovery"
+    file: docs/stories/2.3-feed.md
+    status: pending
+    assigned_to: dev
+    estimated_hours: 5
+    dependencies:
+      - story-2.1 # Requires content to display
+
+    acceptance_criteria:
+      - Feed page at /feed (all authenticated users)
+      - Displays content in reverse chronological order
+      - Each item shows image/video, creator nickname, category tags, timestamp
+      - Infinite scroll (20 items initially, fetch next 20 on scroll)
+      - Clicking item opens Creator Profile View or full-screen view
+      - Video auto-play when scrolled into view (muted by default)
+      - Loading spinner for new content batch
+      - Empty state if no content
+
+    quality_gates:
+      - type: manual
+        description: "Test feed infinite scroll"
+        command: "Scroll feed, verify new content loads, test video autoplay"
+      - type: coderabbit
+        description: "Review infinite scroll implementation and performance"
+        command: "coderabbit --prompt-only -t uncommitted"
+      - type: performance
+        description: "Verify feed loads in <2s"
+        command: "Lighthouse audit, check performance score"
+
+    outputs:
+      - Feed page functional
+      - Infinite scroll working
+      - Video autoplay implemented
+
+  - id: story-2.4
+    title: "Category-Based Content Filtering"
+    file: docs/stories/2.4-category-filtering.md
+    status: pending
+    assigned_to: dev
+    estimated_hours: 3
+    dependencies:
+      - story-2.3 # Extends feed functionality
+
+    acceptance_criteria:
+      - Filter UI on Feed page (horizontal scrollable tags or dropdown)
+      - Clicking category filters feed to show only that category
+      - Multiple category selection supported (OR logic)
+      - "All Categories" option clears filter
+      - Filter state persisted in URL query params
+      - Feed updates dynamically without full page reload
+
+    quality_gates:
+      - type: manual
+        description: "Test category filtering"
+        command: "Filter feed by category, verify correct content shown, test URL params"
+      - type: coderabbit
+        description: "Review filtering logic and URL state management"
+        command: "coderabbit --prompt-only -t uncommitted"
+
+    outputs:
+      - Category filtering functional
+      - URL state management working
+
+  - id: story-2.5
+    title: "Creator Profile View"
+    file: docs/stories/2.5-creator-profile.md
+    status: pending
+    assigned_to: dev
+    estimated_hours: 4
+    dependencies:
+      - story-2.1 # Requires content to display
+
+    acceptance_criteria:
+      - Creator profile page at /creator/[id] (all authenticated users)
+      - Displays creator nickname, join date, total content count
+      - Grid layout shows all creator's content
+      - "Message Creator" button (navigates to chat in Epic 3)
+      - Trial users see tooltip ("Upgrade to message real creators")
+      - Full-screen lightbox for content items
+      - 404 if creator doesn't exist
+
+    quality_gates:
+      - type: manual
+        description: "Test creator profile page"
+        command: "Navigate to creator profile, verify content displayed, test lightbox"
+      - type: coderabbit
+        description: "Review profile page and routing"
+        command: "coderabbit --prompt-only -t uncommitted"
+
+    outputs:
+      - Creator profile page functional
+      - Lightbox modal working
+
+  - id: story-2.6
+    title: "Swipe-Based Creator Discovery (Happn-Style)"
+    file: docs/stories/2.6-swipe-discovery.md
+    status: pending
+    assigned_to: dev
+    estimated_hours: 6
+    dependencies:
+      - story-2.1 # Requires content to display
+
+    acceptance_criteria:
+      - Discovery page at /discover (all authenticated users)
+      - Category filter selector at top
+      - Card-based UI (one creator at a time with 3-5 recent uploads carousel)
+      - Swipe right/heart adds to Favorites table
+      - Swipe left/X dismisses and loads next
+      - Swipe up/tap navigates to Creator Profile View
+      - Empty state when all creators viewed
+      - Keyboard navigation (arrow keys on desktop)
+
+    quality_gates:
+      - type: manual
+        description: "Test swipe discovery UI"
+        command: "Swipe creators, verify favorites saved, test keyboard navigation"
+      - type: coderabbit
+        description: "Review swipe gesture handling and favorites logic"
+        command: "coderabbit --prompt-only -t uncommitted"
+
+    outputs:
+      - Discovery page functional
+      - Swipe gestures working
+      - Favorites system implemented
+
+# Epic-Level Quality Gates
+epic_quality_gates:
+  - type: integration
+    description: "Verify complete Epic 2 integration"
+    checklist:
+      - Creators can upload content with categories
+      - Creators can view and delete their content in My Content
+      - Consumers can browse feed with infinite scroll
+      - Feed can be filtered by categories
+      - Creator profiles display all content
+      - Discovery swipe UI works on mobile and desktop
+      - All pages responsive and mobile-friendly
+
+  - type: coderabbit
+    description: "Full Epic 2 architecture review"
+    command: "coderabbit --prompt-only --base main"
+    focus:
+      - Content upload security (file validation, size limits)
+      - Database queries optimization (N+1 prevention)
+      - Infinite scroll performance
+      - Responsive design patterns
+
+  - type: performance
+    description: "Performance audit"
+    checklist:
+      - Feed loads in <2s on 4G
+      - Infinite scroll smooth (no janky scrolling)
+      - Image/video loading optimized (lazy loading, WebP)
+      - Lighthouse score >85 for performance
+
+# Success Criteria
+success_criteria:
+  - All 6 stories completed with acceptance criteria met
+  - All quality gates passed
+  - Creators can upload and manage content
+  - Consumers can discover content via feed, filters, and swipe UI
+  - Performance targets met (<2s load, smooth infinite scroll)
+  - Mobile-first responsive design validated
+
+# Risk Mitigation
+risks:
+  - risk: "Large file uploads cause performance issues"
+    mitigation: "Implement file size limits (50MB), compress images on upload, use Supabase Storage CDN"
+    owner: dev
+
+  - risk: "Infinite scroll breaks on slow connections"
+    mitigation: "Add loading states, implement retry logic, test on throttled network (3G)"
+    owner: dev
+
+  - risk: "Category filtering logic becomes complex with multiple selections"
+    mitigation: "Use PostgreSQL array containment operators (@>), keep query simple, add indexes on categories"
+    owner: dev
+
+  - risk: "Swipe discovery UI difficult to implement cross-platform"
+    mitigation: "Use proven library (react-swipeable or similar), test on iOS/Android browsers"
+    owner: dev
+
+# Estimated Timeline
+timeline:
+  estimated_total_hours: 26
+  estimated_calendar_days: 7-10
+  buffer_percentage: 20
+
+  breakdown:
+    - week_1:
+        focus: "Content Upload & Gallery (Stories 2.1, 2.2)"
+        deliverables: "Creators can upload and manage content"
+    - week_2:
+        focus: "Feed & Discovery (Stories 2.3, 2.4, 2.5, 2.6)"
+        deliverables: "Consumers can discover content via feed and swipe UI"
+
+# Handoff to Epic 3
+handoff:
+  prerequisites:
+    - All Epic 2 stories completed
+    - All quality gates passed
+    - Content upload and discovery functional
+
+  outputs_for_epic_3:
+    - Content available in database to display in chats
+    - Creator profiles available for messaging context
+    - Feed infrastructure for future AI agent content recommendations
+
+  next_epic: "Epic 3: Real-Time Messaging & AI Agent System"
+  next_steps:
+    - "Create Epic 3 execution plan"
+    - "Begin Story 3.1: Real-Time Chat Infrastructure"

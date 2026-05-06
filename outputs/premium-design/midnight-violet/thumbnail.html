@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=600, height=600">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      width: 600px;
+      height: 600px;
+      background: #0D0B1A;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+    }
+
+    /* Background gradient */
+    .bg-gradient {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 30%, rgba(168, 85, 247, 0.25) 0%, transparent 70%);
+      z-index: 0;
+    }
+
+    /* Grain texture */
+    .grain {
+      position: absolute;
+      inset: 0;
+      opacity: 0.04;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 180px;
+      z-index: 1;
+    }
+
+    /* Content container */
+    .content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      padding: 60px;
+    }
+
+    /* Logo/Brand */
+    .brand {
+      font-size: 64px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #A855F7, #C084FC);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.04em;
+      margin-bottom: 20px;
+      line-height: 1;
+    }
+
+    /* Acronym */
+    .acronym {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #A855F7;
+      margin-bottom: 40px;
+      font-weight: 500;
+    }
+
+    /* Tagline */
+    .tagline {
+      font-size: 18px;
+      color: #B8A8D4;
+      line-height: 1.6;
+      max-width: 400px;
+      margin: 0 auto 40px;
+      letter-spacing: -0.01em;
+    }
+
+    /* Accent line */
+    .accent-line {
+      width: 80px;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #A855F7, transparent);
+      margin: 0 auto;
+      box-shadow: 0 0 20px rgba(168, 85, 247, 0.6);
+    }
+
+    /* Bottom badge */
+    .badge {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(168, 85, 247, 0.1);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(168, 85, 247, 0.2);
+      border-radius: 30px;
+      padding: 12px 28px;
+      font-size: 13px;
+      color: #C084FC;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    /* Outer ring */
+    .ring {
+      position: absolute;
+      width: 480px;
+      height: 480px;
+      border-radius: 50%;
+      border: 1px solid rgba(168, 85, 247, 0.08);
+      z-index: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-gradient"></div>
+  <div class="grain"></div>
+  <div class="ring"></div>
+
+  <div class="content">
+    <div class="brand">MRA</div>
+    <div class="acronym">Monetization &amp; Revenue Amplification</div>
+    <div class="tagline">Transform manual selling into automated revenue with Facebook Ads and AI</div>
+    <div class="accent-line"></div>
+  </div>
+
+  <div class="badge">FeetFans Method</div>
+</body>
+</html>

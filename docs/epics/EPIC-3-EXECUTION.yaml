@@ -1,0 +1,371 @@
+---
+epic:
+  id: epic-3
+  title: "Real-Time Messaging & AI Agent System"
+  description: "Implement real-time chat functionality allowing creators and consumers to communicate, deploy 15 AI roleplay agents that engage with creators during trial period with randomized timing and diverse personalities, and enforce 24-hour message TTL to optimize storage costs."
+  status: pending
+  created_at: 2026-05-03
+  depends_on:
+    - epic-1 # Requires authentication and database
+    - epic-2 # Creators need content before AI agents can reference it
+
+execution_plan:
+  mode: sequential # Chat infrastructure must be ready before AI agents
+  parallel_waves: false # AI agent stories (3.4-3.8) depend on chat infrastructure (3.1-3.3)
+
+stories:
+  - id: story-3.1
+    title: "Real-Time Chat Infrastructure"
+    file: docs/stories/3.1-chat-infrastructure.md
+    status: pending
+    assigned_to: dev
+    estimated_hours: 8
+    dependencies:
+      - story-1.3 # Requires database
+      - story-1.4 # Requires authentication
+
+    acceptance_criteria:
+      - Database schema extended with conversations and messages tables
+      - WebSocket server (Socket.io) or SSE endpoint configured
+      - POST /api/messages endpoint creates message with expires_at = +24h
+      - Backend emits message via WebSocket to recipient
+      - Cron job deletes messages where expires_at < NOW()
+      - Frontend chat component connects to WebSocket and displays messages
+      - Error handling for WebSocket failures with retry logic
+
+    quality_gates:
+      - type: manual
+        description: "Test real-time messaging end-to-end"
+        command: "Send message from one user, verify received in real-time by other user"
+      - type: coderabbit
+        description: "Review WebSocket implementation and message TTL logic"
+        command: "coderabbit --prompt-only -t uncommitted"
+      - type: performance
+        description: "Verify message latency <500ms (p95)"
+        command: "Load test with 50 concurrent users, measure latency"
+
+    outputs:
+      - Conversations and messages tables created
+      - WebSocket server running
+      - Real-time messaging functional
+
+  - id: story-3.2
+    title: "Messages Inbox & Conversation List"
+    file: docs/stories/3.2-inbox.md
+    status: pending
+    assigned_to: dev
+    estimated_hours: 4
+    dependencies:
+      - story-3.1 # Requires conversations table
+
+    acceptance_criteria:
+      - Inbox page at /messages (all authenticated users)
+      - Displays all conversations for user (creator: consumers/AI, consumer: creators)
+      - Each conversation shows nickname, last message preview, timestamp, unread indicator
+      - Conversations sorted by most recent message first
+      - Clicking conversation navigates to Chat Screen
+      - Empty state if no conversations
+      - Real-time updates when new message received
+
+    quality_gates:
+      - type: manual
+        description: "Test inbox updates in real-time"
+        command: "Send message, verify inbox updates without page reload"
+      - type: coderabbit
+        description: "Review inbox query optimization and real-time updates"
+        command: "coderabbit --prompt-only -t uncommitted"
+
+    outputs:
+      - Inbox page functional
+      - Real-time conversation list updates
+
+  - id: story-3.3
+    title: "Chat Screen with Message History"
+    file: docs/stories/3.3-chat-screen.md
+    status: pending
+    assigned_to: dev
+    estimated_hours: 5
+    dependencies:
+      - story-3.1 # Requires messages table and WebSocket
+
+    acceptance_criteria:
+      - Chat page at /messages/[conversationId]
+      - Displays message history in chronological order
+      - Each message shows sender nickname, content, timestamp
+      - Message input field with Send button (Enter key to send)
+      - Optimistic UI update when sending message
+      - Real-time message delivery via WebSocket
+      - Auto-scroll to bottom when new message received/sent
+      - Typing indicator (optional for MVP)
+      - Messages >24h old automatically removed from display
+      - Trial users see banner "Upgrade to share links and message real buyers"
+
+    quality_gates:
+      - type: manual
+        description: "Test chat screen end-to-end"
+        command: "Send messages, verify real-time delivery, test scroll behavior"
+      - type: coderabbit
+        description: "Review chat UI and message rendering"
+        command: "coderabbit --prompt-only -t uncommitted"
+
+    outputs:
+      - Chat screen functional
+      - Message history displayed
+      - Real-time message updates
+
+  - id: story-3.4
+    title: "AI Agent Personas & Personality Configuration"
+    file: docs/stories/3.4-ai-agent-personas.md
+    status: pending
+    assigned_to: dev
+    estimated_hours: 3
+    dependencies:
+      - story-3.1 # Requires database
+
+    acceptance_criteria:
+      - Database schema extended with ai_agents table
+      - 15 agent personas pre-seeded with unique characteristics (names, personalities, locations)
+      - Personality prompts for Claude API defined for each agent
+      - Admin script to add/edit agent personas without code deploy
+      - Each agent has placeholder avatar image
+
+    quality_gates:
+      - type: manual
+        description: "Verify AI agents seeded in database"
+        command: "Check ai_agents table, verify 15 personas with diverse characteristics"
+      - type: coderabbit
+        description: "Review agent persona data structure"
+        command: "coderabbit --prompt-only -t uncommitted"
+
+    outputs:
+      - AI agents table created
+      - 15 agent personas seeded
+      - Personality prompts defined
+
+  - id: story-3.5
+    title: "AI Agent Engagement Trigger & Randomized Distribution"
+    file: docs/stories/3.5-ai-agent-trigger.md
+    status: pending
+    assigned_to: dev
+    estimated_hours: 5
+    dependencies:
+      - story-3.4 # Requires ai_agents table
+
+    acceptance_criteria:
+      - Database schema extended with agent_assignments table
+      - On creator signup/age verification, assign 15 AI agents with randomized schedule
+      - Scheduled job runs hourly, checks for due agent assignments
+      - For each due assignment, create conversation and trigger AI message
+      - Assignment marked as sent_at after message sent
+      - Randomization ensures variability across creators
+      - Agents do NOT reveal they are AI
+
+    quality_gates:
+      - type: manual
+        description: "Test AI agent assignment and triggering"
+        command: "Create creator account, verify AI agents scheduled, wait for first message"
+      - type: coderabbit
+        description: "Review scheduling logic and randomization"
+        command: "coderabbit --prompt-only -t uncommitted"
+
+    outputs:
+      - Agent assignments table created
+      - Scheduled job functional
+      - AI agents assigned on creator signup
+
+  - id: story-3.6
+    title: "AI Agent Message Generation"
+    file: docs/stories/3.6-ai-agent-message-generation.md
+    status: pending
+    assigned_to: dev
+    estimated_hours: 6
+    dependencies:
+      - story-3.5 # Requires agent assignment trigger
+      - story-2.1 # Needs creator content to reference
+
+    acceptance_criteria:
+      - Backend function generateAgentMessage(agentId, creatorId)
+      - Fetches agent personality and creator's recent content
+      - Constructs prompt for Claude Haiku API
+      - Claude API call made, response parsed (keep <50 words)
+      - Message saved to messages table with sender_id = agent_id
+      - Error handling with retry up to 3 times
+      - Cost tracking logs token usage (target <500 tokens per message)
+      - Rate limiting max 10 agent messages per minute
+
+    quality_gates:
+      - type: manual
+        description: "Test AI agent message generation"
+        command: "Trigger AI agent, verify message contextual and <50 words"
+      - type: coderabbit
+        description: "Review Claude API integration and error handling"
+        command: "coderabbit --prompt-only -t uncommitted"
+      - type: cost
+        description: "Verify token usage <500 per message"
+        command: "Monitor Claude API logs, calculate average tokens"
+
+    outputs:
+      - AI message generation functional
+      - Claude Haiku API integrated
+      - Cost tracking implemented
+
+  - id: story-3.7
+    title: "AI Agent Response to Creator Messages"
+    file: docs/stories/3.7-ai-agent-response.md
+    status: pending
+    assigned_to: dev
+    estimated_hours: 5
+    dependencies:
+      - story-3.6 # Requires AI message generation
+
+    acceptance_criteria:
+      - When creator sends message to AI agent, backend detects recipient is AI
+      - Backend triggers generateAgentResponse(agentId, conversationId, creatorMessage)
+      - Fetches conversation history (last 5 messages) and agent personality
+      - Prompt constructed to continue conversation naturally (<75 words)
+      - If creator is on trial and shares link, agent responds "I don't see any link"
+      - If creator is paid and shares link, agent makes polite excuse
+      - AI agents NEVER complete purchases or share payment details
+
+    quality_gates:
+      - type: manual
+        description: "Test AI agent conversation flow"
+        command: "Send messages to AI agent, verify contextual responses, test link blocking"
+      - type: coderabbit
+        description: "Review conversation context handling and link detection"
+        command: "coderabbit --prompt-only -t uncommitted"
+
+    outputs:
+      - AI agent responses functional
+      - Conversation context maintained
+      - Link blocking for trial users
+
+  - id: story-3.8
+    title: "Trial User Link Blocking"
+    file: docs/stories/3.8-trial-link-blocking.md
+    status: pending
+    assigned_to: dev
+    estimated_hours: 2
+    dependencies:
+      - story-3.7 # Extends AI agent response logic
+
+    acceptance_criteria:
+      - Message content validation detects URLs (regex)
+      - If trial user sends URL to AI agent, link stripped before AI sees it
+      - AI agent responds as if no link was shared
+      - Trial banner reminds "AI agents cannot see links. Upgrade to share with real buyers"
+      - Paid users can share links freely (no validation)
+
+    quality_gates:
+      - type: manual
+        description: "Test link blocking for trial users"
+        command: "As trial user, send link to AI agent, verify link stripped and response appropriate"
+      - type: coderabbit
+        description: "Review URL detection regex and stripping logic"
+        command: "coderabbit --prompt-only -t uncommitted"
+
+    outputs:
+      - Link blocking functional for trial users
+      - URL detection regex working
+
+# Epic-Level Quality Gates
+epic_quality_gates:
+  - type: integration
+    description: "Verify complete Epic 3 integration"
+    checklist:
+      - Users can send and receive real-time messages
+      - Inbox displays all conversations with real-time updates
+      - Chat screen shows message history and handles new messages
+      - Creators receive AI agent messages within 24h of signup
+      - AI agents respond contextually to creator messages
+      - Trial users cannot share links with AI agents
+      - Messages auto-delete after 24h
+      - WebSocket connections handle failures gracefully
+
+  - type: coderabbit
+    description: "Full Epic 3 architecture review"
+    command: "coderabbit --prompt-only --base main"
+    focus:
+      - WebSocket security (authentication, message validation)
+      - AI agent cost optimization (token usage, rate limiting)
+      - Database query optimization (message history, inbox)
+      - Error handling and retry logic
+
+  - type: performance
+    description: "Performance and cost audit"
+    checklist:
+      - Message latency <500ms (p95)
+      - WebSocket handles 100+ concurrent connections
+      - AI agent token usage <500 per message
+      - Message TTL cron job runs efficiently
+      - Database indexes optimize message queries
+
+  - type: cost
+    description: "AI agent cost validation"
+    checklist:
+      - Average cost per creator <$0.50/month for AI messages
+      - Claude Haiku API usage within budget
+      - Rate limiting prevents runaway costs
+
+# Success Criteria
+success_criteria:
+  - All 8 stories completed with acceptance criteria met
+  - All quality gates passed
+  - Real-time messaging functional and performant
+  - 15 AI agents engage creators with contextual messages
+  - Trial users motivated to upgrade (AI engagement but link blocking)
+  - Message TTL reduces storage costs
+  - AI agent cost <$0.50 per creator per month
+
+# Risk Mitigation
+risks:
+  - risk: "AI agent costs exceed budget at scale"
+    mitigation: "Use Claude Haiku (cheapest model), enforce strict rate limiting, monitor token usage, consider switching to GPT-4o-mini if needed"
+    owner: dev
+
+  - risk: "WebSocket connections drop frequently, poor UX"
+    mitigation: "Implement robust retry logic, fallback to polling if WebSocket unavailable, test on mobile networks"
+    owner: dev
+
+  - risk: "24h message TTL causes unexpected data loss"
+    mitigation: "Display warning to users, document TTL policy, ensure cron job runs reliably"
+    owner: dev
+
+  - risk: "AI agents reveal they are AI accidentally"
+    mitigation: "Carefully craft personality prompts, test agent responses, add guardrails in prompt"
+    owner: dev
+
+  - risk: "Scheduling logic fails, creators don't receive AI messages"
+    mitigation: "Add monitoring/alerting for scheduled job failures, implement retry logic"
+    owner: dev
+
+# Estimated Timeline
+timeline:
+  estimated_total_hours: 38
+  estimated_calendar_days: 10-14
+  buffer_percentage: 25 # Higher buffer due to AI integration complexity
+
+  breakdown:
+    - week_1:
+        focus: "Chat Infrastructure (Stories 3.1, 3.2, 3.3)"
+        deliverables: "Real-time messaging functional"
+    - week_2:
+        focus: "AI Agent System (Stories 3.4, 3.5, 3.6, 3.7, 3.8)"
+        deliverables: "AI agents engage creators with contextual messages"
+
+# Handoff to Epic 4
+handoff:
+  prerequisites:
+    - All Epic 3 stories completed
+    - All quality gates passed
+    - Real-time messaging and AI agents functional
+
+  outputs_for_epic_4:
+    - Messaging infrastructure for trial/paid feature gating
+    - AI engagement data to measure trial conversion impact
+    - Subscription status checks integrated in message flow
+
+  next_epic: "Epic 4: Trial & Subscription Management"
+  next_steps:
+    - "Create Epic 4 execution plan"
+    - "Begin Story 4.1: Trial Period Tracking & Initialization"

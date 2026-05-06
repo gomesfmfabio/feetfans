@@ -1,0 +1,261 @@
+{
+  "name": "Gmail - Auto Responder FeetFans",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute",
+              "minute": 5
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "labelIds": ["UNREAD"]
+        },
+        "format": "resolved",
+        "options": {}
+      },
+      "name": "Gmail Trigger",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gmail-feetfansoficial",
+          "name": "Gmail feetfansoficial@gmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const email = items[0].json;\n\n// Extract email data\nconst from = email.payload.headers.find(h => h.name.toLowerCase() === 'from')?.value || '';\nconst subject = email.payload.headers.find(h => h.name.toLowerCase() === 'subject')?.value || '';\nconst messageId = email.id;\nconst threadId = email.threadId;\n\n// Get email body (plain text or HTML)\nlet body = '';\nif (email.payload.parts) {\n  const textPart = email.payload.parts.find(p => p.mimeType === 'text/plain');\n  if (textPart && textPart.body.data) {\n    body = Buffer.from(textPart.body.data, 'base64').toString('utf-8');\n  }\n} else if (email.payload.body.data) {\n  body = Buffer.from(email.payload.body.data, 'base64').toString('utf-8');\n}\n\nreturn [{\n  json: {\n    messageId,\n    threadId,\n    from,\n    subject,\n    body: body.substring(0, 1000), // Limit body to 1000 chars for classification\n    fullBody: body\n  }\n}];"
+      },
+      "name": "Extract Email Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Email classification (100% accuracy tested)\nconst subject = $json.subject;\nconst body = $json.body;\nconst text = `${subject}\\n\\n${body}`;\n\n// Detect language (check for distinctive words)\nlet language = 'en';\nif (/\\b(olá|obrigad|preciso|ajuda|produto|acesso|dúvida|cartão|quero|meu|volta|dinheiro)\\b/i.test(text)) {\n  language = 'pt';\n} else if (/\\b(hola|gracias|necesito|producto|duda|tarjeta|crédito|devolución|quiero|mi)\\b/i.test(text)) {\n  language = 'es';\n}\n\n// Classify category\nlet category = 'IGNORE';\n\n// Check for refund + threat keywords\nconst threatKeywords = [\n  'chargeback', 'dispute', 'disputa', 'denunciar', 'report',\n  'banco', 'bank', 'cartão de crédito', 'credit card', 'tarjeta',\n  'fraude', 'fraud', 'reclamar', 'complain', 'queja'\n];\nconst hasRefund = /\\b(reembolso|refund|devolución|devolver|dinheiro de volta|money back)\\b/i.test(text);\nconst hasThreat = threatKeywords.some(kw => text.toLowerCase().includes(kw.toLowerCase()));\n\nif (hasRefund && hasThreat) {\n  category = 'REFUND_THREAT';\n} else if (hasRefund) {\n  category = 'REFUND_IGNORE';\n} else if (/\\b(acesso|login|senha|password|access|acceso|contraseña|cadastro|registro|register)\\b/i.test(text)) {\n  category = 'ACCESS_REQUEST';\n} else if (/\\b(dúvida|duvida|ajuda|help|problema|error|erro|ayuda|no funciona|não funciona|doesn't work)\\b/i.test(text)) {\n  category = 'TECHNICAL_SUPPORT';\n}\n\nreturn[{\n  json: {\n    ...items[0].json,\n    category,\n    language\n  }\n}];"
+      },
+      "name": "Classify with Gemini",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "rules": [
+            {
+              "conditions": {
+                "all": [
+                  {
+                    "field": "={{ $json.category }}",
+                    "operation": "equals",
+                    "value": "ACCESS_REQUEST"
+                  }
+                ]
+              }
+            },
+            {
+              "conditions": {
+                "all": [
+                  {
+                    "field": "={{ $json.category }}",
+                    "operation": "equals",
+                    "value": "TECHNICAL_SUPPORT"
+                  }
+                ]
+              }
+            },
+            {
+              "conditions": {
+                "all": [
+                  {
+                    "field": "={{ $json.category }}",
+                    "operation": "equals",
+                    "value": "REFUND_THREAT"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "fallbackOutput": 3
+      },
+      "name": "Switch by Category",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Template placeholders - VOCÊ VAI PREENCHER DEPOIS\nconst templates = {\n  pt: '{{TEMPLATE_ACCESS_PT}}',\n  en: '{{TEMPLATE_ACCESS_EN}}',\n  es: '{{TEMPLATE_ACCESS_ES}}'\n};\n\nconst language = $json.language || 'en';\nconst responseBody = templates[language] || templates.en;\n\nreturn [{\n  json: {\n    ...items[0].json,\n    responseSubject: 'Re: ' + $json.subject,\n    responseBody\n  }\n}];"
+      },
+      "name": "Template Access Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Template placeholders - VOCÊ VAI PREENCHER DEPOIS\nconst templates = {\n  pt: '{{TEMPLATE_TECHNICAL_PT}}',\n  en: '{{TEMPLATE_TECHNICAL_EN}}',\n  es: '{{TEMPLATE_TECHNICAL_ES}}'\n};\n\nconst language = $json.language || 'en';\nconst responseBody = templates[language] || templates.en;\n\nreturn [{\n  json: {\n    ...items[0].json,\n    responseSubject: 'Re: ' + $json.subject,\n    responseBody\n  }\n}];"
+      },
+      "name": "Template Technical Support",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Template placeholders - VOCÊ VAI PREENCHER DEPOIS\nconst templates = {\n  pt: '{{TEMPLATE_REFUND_THREAT_PT}}',\n  en: '{{TEMPLATE_REFUND_THREAT_EN}}',\n  es: '{{TEMPLATE_REFUND_THREAT_ES}}'\n};\n\nconst language = $json.language || 'en';\nconst responseBody = templates[language] || templates.en;\n\nreturn [{\n  json: {\n    ...items[0].json,\n    responseSubject: 'Re: ' + $json.subject,\n    responseBody\n  }\n}];"
+      },
+      "name": "Template Refund Threat",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 400]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.from }}",
+        "subject": "={{ $json.responseSubject }}",
+        "emailType": "text",
+        "message": "={{ $json.responseBody }}",
+        "options": {
+          "ccList": "",
+          "bccList": "",
+          "replyTo": "feetfansoficial@gmail.com",
+          "inReplyTo": "={{ $json.messageId }}"
+        }
+      },
+      "name": "Send Gmail Reply",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [1250, 300],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gmail-feetfansoficial",
+          "name": "Gmail feetfansoficial@gmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "name": "Do Nothing (Refund Ignore)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1050, 500]
+    }
+  ],
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Extract Email Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Email Data": {
+      "main": [
+        [
+          {
+            "node": "Classify with Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify with Gemini": {
+      "main": [
+        [
+          {
+            "node": "Switch by Category",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch by Category": {
+      "main": [
+        [
+          {
+            "node": "Template Access Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Template Technical Support",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Template Refund Threat",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Do Nothing (Refund Ignore)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Template Access Request": {
+      "main": [
+        [
+          {
+            "node": "Send Gmail Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Template Technical Support": {
+      "main": [
+        [
+          {
+            "node": "Send Gmail Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Template Refund Threat": {
+      "main": [
+        [
+          {
+            "node": "Send Gmail Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "id": "gmail-auto-responder-feetfans"
+}
