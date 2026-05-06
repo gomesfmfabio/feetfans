@@ -97,7 +97,7 @@ export default function LoginPage() {
         </form>
 
         <div className="mt-4 text-center text-sm space-y-2">
-          <a href="/forgot-password" className="text-primary hover:underline block">
+          <a href="/reset-password" className="text-primary hover:underline block">
             Forgot password?
           </a>
           <p>
