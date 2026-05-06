@@ -42,19 +42,21 @@
 
 ---
 
-## 🎯 Sprint 3 (Week 5-6): Admin Dashboard
+## 🚧 Sprint 3 (Week 5-6): Admin Dashboard — IN PROGRESS
 
 **Goal:** Self-service moderation
 
-- [ ] Admin auth (role check)
-- [ ] Moderation queue UI
-- [ ] Content approve/reject actions
-- [ ] User management (ban/unban)
-- [ ] Reports dashboard
+- [x] Admin auth (role check + permissions)
+- [x] Admin dashboard layout with stats
+- [x] Moderation queue UI
+- [x] Content approve/reject actions
+- [x] User management (ban/unban)
+- [x] Reports dashboard
 - [ ] Basic analytics (signups, revenue)
 - [ ] Feature flags UI
+- [ ] Audit log viewer
 
-**Deliverable:** Admin panel at /admin
+**Deliverable:** Admin panel at /admin ✓ (partial)
 
 ---
 
