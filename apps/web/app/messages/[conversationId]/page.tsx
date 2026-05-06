@@ -32,6 +32,8 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(true);
   const [messageInput, setMessageInput] = useState('');
   const [sending, setSending] = useState(false);
+  const [isAIAgent, setIsAIAgent] = useState(false);
+  const [upgradeRequired, setUpgradeRequired] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const sseRef = useRef<EventSource | null>(null);
@@ -116,6 +118,15 @@ export default function ChatPage() {
       // Determine other user
       const other = conv.creator_id === session.user.id ? conv.consumer : conv.creator;
       setOtherUser(other);
+
+      // Check if other user is an AI agent
+      const { data: agentCheck } = await supabase
+        .from('ai_agents')
+        .select('id')
+        .eq('id', other.id)
+        .single();
+
+      setIsAIAgent(!!agentCheck);
 
       // Load messages
       await loadMessages();
@@ -237,11 +248,19 @@ export default function ChatPage() {
         }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error('Failed to send message');
+        // Check if upgrade is required
+        if (data.upgrade_required) {
+          setUpgradeRequired(true);
+          setMessageInput(content); // Restore input
+          return;
+        }
+        throw new Error(data.error || 'Failed to send message');
       }
 
-      const { message } = await response.json();
+      const { message } = data;
 
       // Optimistic UI update
       setMessages(prev => {
@@ -249,9 +268,12 @@ export default function ChatPage() {
         if (prev.some(m => m.id === message.id)) return prev;
         return [...prev, message];
       });
-    } catch (err) {
+
+      // Clear upgrade required banner on successful send
+      setUpgradeRequired(false);
+    } catch (err: any) {
       console.error('Failed to send message:', err);
-      alert('Failed to send message. Please try again.');
+      alert(err.message || 'Failed to send message. Please try again.');
       setMessageInput(content); // Restore input
     } finally {
       setSending(false);
@@ -310,8 +332,26 @@ export default function ChatPage() {
         </div>
       </div>
 
+      {/* Upgrade Required Banner */}
+      {upgradeRequired && !isAIAgent && (
+        <div className="bg-red-50 border-b border-red-200 px-4 py-3 text-center">
+          <p className="text-sm text-red-800 font-medium mb-2">
+            🔒 Upgrade to Message Real Buyers
+          </p>
+          <p className="text-xs text-red-700 mb-2">
+            Trial users can only message AI agents. Upgrade to $9/month to unlock messaging with real buyers.
+          </p>
+          <button
+            onClick={() => router.push('/checkout')}
+            className="bg-red-600 text-white px-4 py-1.5 rounded-md text-sm font-medium hover:bg-red-700 transition-colors"
+          >
+            Upgrade Now - $9/month
+          </button>
+        </div>
+      )}
+
       {/* Trial Banner */}
-      {currentUser?.subscription_status === 'trial' && (
+      {currentUser?.subscription_status === 'trial' && !upgradeRequired && (
         <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2 text-center">
           <p className="text-sm text-yellow-800">
             ⚠️ Upgrade to share links and message real buyers

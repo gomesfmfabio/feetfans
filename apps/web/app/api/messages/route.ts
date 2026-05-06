@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 import { generateAgentResponse } from '../../../../lib/ai-agents/response-generator';
+import { checkFeatureAccess } from '../../../../lib/middleware/feature-gating';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 
@@ -133,6 +134,38 @@ export async function POST(request: NextRequest) {
         { error: 'Unauthorized to send message in this conversation' },
         { status: 403 }
       );
+    }
+
+    // Feature gating: Check if user can message the recipient
+    const recipientId =
+      conversation.creator_id === session.user.id
+        ? conversation.consumer_id
+        : conversation.creator_id;
+
+    // Check if recipient is an AI agent
+    const { data: isAIAgent } = await supabase
+      .from('ai_agents')
+      .select('id')
+      .eq('id', recipientId)
+      .single();
+
+    // If recipient is a real user (not AI agent), check feature access
+    if (!isAIAgent) {
+      const hasAccess = await checkFeatureAccess(
+        session.user.id,
+        'message_real_users'
+      );
+
+      if (!hasAccess) {
+        return NextResponse.json(
+          {
+            error: 'Upgrade required',
+            message: 'Upgrade to $9/month to message real buyers',
+            upgrade_required: true,
+          },
+          { status: 403 }
+        );
+      }
     }
 
     // Create message with 24-hour expiration
