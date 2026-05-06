@@ -1,0 +1,27 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/expire-trials",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/expire-featured",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/ai-agents/cron/process-assignments",
+      "schedule": "0 * * * *"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
+      ]
+    }
+  ]
+}

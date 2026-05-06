@@ -1,26 +1,24 @@
 {
-  "name": "FeetFans Marketplace",
+  "name": "FeetFans - Marketplace",
   "short_name": "FeetFans",
-  "description": "Anonymous marketplace for foot content creators to sell photos and videos",
+  "description": "Marketplace para creators de foot content",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#7c3aed",
-  "orientation": "portrait-primary",
+  "theme_color": "#e91e63",
+  "orientation": "portrait",
   "icons": [
     {
-      "src": "/icons/icon-192x192.png",
+      "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-512x512.png",
+      "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ],
-  "categories": ["shopping", "lifestyle"],
-  "screenshots": []
+  ]
 }
