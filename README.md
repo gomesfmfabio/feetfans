@@ -1,279 +1,179 @@
-# FeetFans Marketplace
+# FeetFans Marketplace PWA
 
-A progressive web application (PWA) marketplace for foot content creators to sell photos and videos anonymously.
+Marketplace PWA para creators monetizarem conteúdo de foot photography de forma anônima.
 
-## 🏗️ Architecture Overview
+## Status do Projeto
 
-This project uses a **monorepo architecture** powered by Turborepo and pnpm workspaces:
+**Versão:** 1.0.0-beta  
+**Última atualização:** 2026-05-05
 
-```
-feetfans-marketplace/
-├── apps/
-│   ├── web/          # Next.js 15+ PWA (frontend)
-│   └── api/          # Express API (backend)
-├── packages/
-│   └── shared/       # Shared utilities and TypeScript types
-├── docs/             # Project documentation, stories, epics
-└── .aiox-core/       # AIOX framework (AI-orchestrated development)
-```
+### Epics Implementados
 
-### Technology Stack
+- ✅ **Epic 1:** Authentication & Setup (6 stories)
+- ✅ **Epic 2:** Content Management & Feed (6 stories)
+- ✅ **Epic 3:** Real-Time Messaging & AI Agents (8 stories)
+- ✅ **Epic 4:** Trial & Subscription Management (4 stories core)
+- ✅ **Epic 5:** Featured Placement (core)
+- ✅ **Epic 6:** Moderation & Production (MVP)
 
-- **Frontend:** Next.js 15+ (App Router), React 19, Tailwind CSS, PWA
-- **Backend:** Node.js, Express, TypeScript
-- **Database:** Supabase (PostgreSQL with Row Level Security)
-- **Authentication:** Supabase Auth (email/password, OAuth)
-- **Age Verification:** Onfido API (18+ enforcement)
-- **Storage:** Supabase Storage (encrypted file storage)
-- **Payment Processing:** Stripe (implemented in Epic 4)
-- **CI/CD:** GitHub Actions
-- **Package Manager:** pnpm
-- **Monorepo Tool:** Turborepo
+**Total:** 30+ stories implementadas
 
----
+## Tech Stack
 
-## 📋 Prerequisites
+- **Frontend:** Next.js 15, React, Tailwind CSS, PWA
+- **Backend:** Next.js API Routes, Node.js
+- **Database:** PostgreSQL (Supabase)
+- **Real-time:** Server-Sent Events (SSE)
+- **AI:** Claude Haiku (Anthropic)
+- **Auth:** Supabase Auth
+- **Storage:** Supabase Storage
+- **Deployment:** Vercel (ready)
 
-Before you begin, ensure you have the following installed:
+## Funcionalidades Principais
 
-- **Node.js** 18.0.0 or higher ([Download](https://nodejs.org/))
-- **pnpm** 8.0.0 or higher
-- **Git** ([Download](https://git-scm.com/))
+### Autenticação & Usuários
+- Signup/Login com email
+- Age verification (18+)
+- Roles: creator, consumer
+- Trial: 7 dias grátis para creators
+- Subscription: $9/mês ou curso FeetFans (grátis)
 
-Install pnpm globally if you haven't already:
+### Content & Feed
+- Upload de fotos/vídeos
+- Categorias (heels, barefoot, yoga, beach, etc.)
+- Feed público
+- Swipe discovery (Tinder-style)
+- Creator profiles
+- Favorites
+
+### Messaging & AI
+- Real-time chat via SSE
+- Mensagens efêmeras (24h Snapchat-style)
+- 15 AI agents com personalidades únicas
+- Auto-assignment randomizado (0-10 dias)
+- Respostas automáticas com Claude Haiku
+- Trial users: apenas AI agents
+- Paid users: mensagens com buyers reais
+
+### Subscription & Monetization
+- Trial tracking (7 dias)
+- Feature gating (trial vs paid)
+- Upgrade flow ($9/mês)
+- Course integration (free_feetfans)
+- Featured placement ($19-$59)
+
+### Moderation & Compliance
+- Content reporting
+- Moderation queue
+- Audit log
+- Health monitoring
+
+## Setup
 
 ```bash
-npm install -g pnpm
-```
-
----
-
-## 🚀 Getting Started
-
-### 1. Clone the Repository
-
-```bash
-git clone <repository-url>
-cd pegasus
-```
-
-### 2. Install Dependencies
-
-Install all dependencies for the monorepo and workspaces:
-
-```bash
+# Install dependencies
 pnpm install
-```
 
-### 3. Set Up Environment Variables
+# Setup environment
+cp .env.example .env.local
+# Preencher variáveis no .env.local
 
-Copy the example environment file and update with your credentials:
+# Run migrations
+supabase db push
 
-```bash
-cp .env.example .env
-```
-
-Edit `.env` and fill in your actual values:
-
-- **Supabase credentials:** Create a project at [supabase.com](https://supabase.com)
-- **Onfido API token:** Sign up at [onfido.com](https://onfido.com) for age verification
-- **Stripe keys:** Get from [stripe.com](https://stripe.com) (needed for Epic 4)
-
-### 4. Run Development Servers
-
-Start all development servers (web + api):
-
-```bash
+# Start dev server
 pnpm dev
 ```
 
-This will start:
-- **Web app:** http://localhost:3000
-- **API server:** http://localhost:3001
+## Environment Variables
 
-Or run workspaces individually:
+Veja `.env.example` para lista completa.
 
-```bash
-# Web app only
-pnpm --filter @feetfans/web dev
+Essenciais:
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `ANTHROPIC_API_KEY`
+- `CRON_SECRET`
 
-# API server only
-pnpm --filter @feetfans/api dev
-```
+## Cron Jobs
 
----
+Configure em Vercel/Railway:
 
-## 📦 Available Scripts
+- `/api/cron/expire-trials` - Diário (00:00)
+- `/api/cron/expire-featured` - Diário (00:00)
+- `/api/ai-agents/cron/process-assignments` - Hourly
 
-### Root Level (runs across all workspaces)
+## Roadmap
 
-- `pnpm dev` - Start all development servers
-- `pnpm build` - Build all workspaces for production
-- `pnpm lint` - Run ESLint across all workspaces
-- `pnpm typecheck` - Run TypeScript type checking
-- `pnpm test` - Run all tests
-- `pnpm format` - Format code with Prettier
+### Próximos Passos
+- [ ] Integração completa Stripe (webhooks, portal)
+- [ ] Admin dashboard (moderation UI)
+- [ ] AI content moderation
+- [ ] Performance optimization (caching, CDN)
+- [ ] Analytics dashboard
+- [ ] Mobile apps (React Native)
 
-### Workspace-Specific
+### Future Enhancements
+- Video streaming
+- Live chat
+- Subscription bundles
+- Referral program
+- Creator analytics
+- Advanced search
 
-Run commands in specific workspaces:
-
-```bash
-# Example: Build only the web app
-pnpm --filter @feetfans/web build
-
-# Example: Run tests in API
-pnpm --filter @feetfans/api test
-```
-
----
-
-## 🏃 Development Workflow
-
-### Code Quality
-
-This project enforces strict code quality standards:
-
-- **Pre-commit hooks** (Husky + lint-staged) automatically run on `git commit`:
-  - ESLint checks
-  - Prettier formatting
-  - TypeScript type checking
-
-### CI/CD Pipeline
-
-GitHub Actions automatically runs on every push to `main` and pull request:
-
-- ✅ Lint checks
-- ✅ Type checking
-- ✅ Test suite
-
-All checks must pass before merging.
-
-### Branch Strategy
-
-- `main` - Production-ready code
-- `feat/*` - Feature branches (e.g., `feat/1.1-repository-setup`)
-- `fix/*` - Bug fix branches
-- `docs/*` - Documentation updates
-
----
-
-## 📁 Project Structure
+## Arquitetura
 
 ```
 apps/
-├── web/                    # Next.js PWA
-│   ├── src/
-│   │   ├── app/           # Next.js App Router pages
-│   │   ├── components/    # React components
-│   │   ├── lib/           # Utility functions
-│   │   └── styles/        # Global styles
-│   ├── public/            # Static assets
-│   └── package.json
-│
-├── api/                    # Express API
-│   ├── src/
-│   │   ├── routes/        # API routes
-│   │   ├── middleware/    # Express middleware
-│   │   ├── services/      # Business logic
-│   │   └── index.ts       # Entry point
-│   └── package.json
-│
-packages/
-└── shared/                 # Shared code
-    ├── src/
-    │   ├── types/         # TypeScript types/interfaces
-    │   ├── utils/         # Shared utilities
-    │   └── index.ts
-    └── package.json
+  web/              # Next.js PWA
+    app/
+      api/          # API routes
+      (auth)/       # Auth pages
+      feed/         # Feed & discovery
+      messages/     # Chat
+      checkout/     # Subscription
+    components/     # React components
+    lib/            # Utils & middleware
+
+supabase/
+  migrations/       # Database migrations
+
+lib/
+  ai-agents/        # AI message generation
+  middleware/       # Feature gating
+  utils/            # Helpers
 ```
 
----
+## Database Schema
 
-## 🧪 Testing
+### Core Tables
+- `users` - User accounts (creators, consumers, AI agents)
+- `content` - Photos/videos
+- `conversations` - Chat conversations
+- `messages` - Chat messages (24h TTL)
+- `ai_agents` - AI bot personas
+- `agent_assignments` - AI scheduling
+- `featured_placements` - Paid promotions
+- `favorites` - User favorites
+- `content_reports` - Moderation
+- `moderation_queue` - Review queue
+- `audit_log` - Compliance tracking
 
-Run tests across all workspaces:
+## Deployment
 
 ```bash
-pnpm test
+# Build for production
+pnpm build
+
+# Deploy to Vercel
+vercel --prod
 ```
 
-Run tests in watch mode:
+## License
 
-```bash
-pnpm --filter @feetfans/web test -- --watch
-```
+Proprietary - FeetFans © 2026
 
----
+## Support
 
-## 🔒 Security
-
-### Environment Variables
-
-**NEVER commit `.env` files to version control.** The `.gitignore` file is configured to exclude:
-
-- `.env`
-- `.env.local`
-- `.env.*.local`
-
-### Sensitive Data
-
-- Database credentials are stored in Supabase (encrypted at rest)
-- ID verification documents use Supabase Storage with encryption
-- Row Level Security (RLS) policies enforce data access rules
-- JWT tokens use httpOnly cookies to prevent XSS attacks
-
----
-
-## 📚 Documentation
-
-- **PRD (Product Requirements Document):** `docs/prd.md`
-- **Architecture:** `docs/architecture.md`
-- **Stories:** `docs/stories/` (user stories for development)
-- **Epics:** `docs/epics/` (epic execution plans)
-- **Decisions:** `docs/DECISIONS.md` (architectural decision records)
-
----
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**Issue:** `pnpm: command not found`
-- **Solution:** Install pnpm globally: `npm install -g pnpm`
-
-**Issue:** TypeScript errors in IDE
-- **Solution:** Restart TypeScript server or run `pnpm typecheck`
-
-**Issue:** Pre-commit hooks failing
-- **Solution:** Run `pnpm lint` and `pnpm format` to fix issues manually
-
-**Issue:** Port already in use
-- **Solution:** Kill the process on port 3000/3001 or change `PORT` in `.env`
-
----
-
-## 📝 License
-
-Private project - All rights reserved.
-
----
-
-## 👥 Contributors
-
-- **Fábio Martinez** - Project Owner
-- **AIOX Framework** - AI-orchestrated development system
-
----
-
-## 🔗 Links
-
-- [Supabase Dashboard](https://app.supabase.com/)
-- [Onfido Documentation](https://documentation.onfido.com/)
-- [Stripe Dashboard](https://dashboard.stripe.com/)
-- [Turborepo Documentation](https://turbo.build/repo/docs)
-- [Next.js Documentation](https://nextjs.org/docs)
-
----
-
-**Built with ❤️ using AIOX (AI-Orchestrated System for Full Stack Development)**
+Para suporte: [seu-email]
