@@ -22,20 +22,23 @@
 
 ---
 
-## 🚧 Sprint 2 (Week 3-4): Stripe Integration
+## ✅ Sprint 2 (Week 3-4): Stripe Integration — COMPLETED
 
 **Goal:** Production-ready payments
 
-- [ ] Stripe account setup
-- [ ] Webhook handler (/api/webhooks/stripe)
-- [ ] Subscription creation with Payment Intent
-- [ ] Auto-renewal logic
-- [ ] Failed payment handling
-- [ ] Cancel/reactivate flow
-- [ ] Billing portal integration
-- [ ] Invoice emails
+- [x] Stripe client configuration
+- [x] Webhook handler (/api/webhooks/stripe)
+- [x] Subscription creation with checkout session
+- [x] Auto-renewal via webhooks
+- [x] Failed payment handling
+- [x] Cancel/reactivate flow (Stripe portal)
+- [x] Billing portal integration
+- [x] Subscription management page
+- [ ] Invoice emails (handled by Stripe)
 
-**Deliverable:** Real payment processing
+**Deliverable:** Real payment processing ✓
+
+**Documentation:** See `docs/STRIPE-SETUP.md` for setup guide
 
 ---
 
