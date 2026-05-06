@@ -1,0 +1,328 @@
+{
+  "name": "FeetFans Gmail Auto-Responder v2.0 (Complete)",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute",
+              "minute": 5
+            }
+          ]
+        },
+        "filters": {
+          "labelIds": ["INBOX"]
+        },
+        "options": {}
+      },
+      "name": "Gmail Trigger - Inbox",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "sbu7IURTjw6qGUTe",
+          "name": "Gmail OAuth2 - feetfansoficial"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute",
+              "minute": 10
+            }
+          ]
+        },
+        "filters": {
+          "labelIds": ["SENT"]
+        },
+        "options": {}
+      },
+      "name": "Gmail Trigger - Sent (Auto-Learning)",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1,
+      "position": [250, 800],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "sbu7IURTjw6qGUTe",
+          "name": "Gmail OAuth2 - feetfansoficial"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract email data\nconst items = $input.all();\nconst result = [];\n\nfor (const item of items) {\n  const email = item.json;\n  \n  result.push({\n    json: {\n      id: email.id,\n      threadId: email.threadId,\n      subject: email.payload?.headers?.find(h => h.name === 'Subject')?.value || '',\n      from: email.payload?.headers?.find(h => h.name === 'From')?.value || '',\n      to: email.payload?.headers?.find(h => h.name === 'To')?.value || '',\n      date: email.payload?.headers?.find(h => h.name === 'Date')?.value || '',\n      body: email.snippet || '',\n      headers: Object.fromEntries(\n        (email.payload?.headers || []).map(h => [h.name, h.value])\n      )\n    }\n  });\n}\n\nreturn result;"
+      },
+      "name": "Extract Email Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Detect language\nconst text = `${$json.subject}\\n\\n${$json.body}`;\n\nlet language = 'en';\nif (/\\b(olá|obrigad|preciso|ajuda|produto|acesso|dúvida|cartão|quero|meu|volta|dinheiro)\\b/i.test(text)) {\n  language = 'pt';\n} else if (/\\b(hola|gracias|necesito|producto|duda|tarjeta|crédito|devolución|quiero|mi)\\b/i.test(text)) {\n  language = 'es';\n}\n\nreturn {\n  ...($json),\n  language: language\n};"
+      },
+      "name": "Detect Language",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// COLE AQUI O CONTEÚDO COMPLETO DE faq-multilingual.json\nconst FAQ_DATABASE = {\n  \"version\": \"1.0\",\n  \"languages\": [\"pt\", \"en\", \"es\"],\n  \"last_updated\": \"2026-05-05\",\n  \"faqs\": [\n    {\n      \"id\": \"FAQ-001\",\n      \"category\": \"greeting\",\n      \"keywords_multilingual\": [\"hi\", \"hello\", \"hola\", \"oi\", \"hey\", \"olá\"],\n      \"responses\": {\n        \"pt\": \"Olá! Bem-vinda ao FeetFans ❤️👣\",\n        \"en\": \"Hello! Welcome to FeetFans ❤️👣\",\n        \"es\": \"¡Hola! Bienvenida a FeetFans ❤️👣\"\n      },\n      \"requires_followup\": true\n    },\n    {\n      \"id\": \"FAQ-002\",\n      \"category\": \"access\",\n      \"keywords_multilingual\": [\"can't access\", \"não consigo acessar\", \"no puedo acceder\", \"find course\", \"encontrar curso\", \"hotmart\", \"login\"],\n      \"responses\": {\n        \"pt\": \"Certo, você precisa entrar no site da Hotmart https://consumer.hotmart.com com o seu email de compra. Após fazer login, clique em \\\"Minhas compras\\\" e selecione \\\"FeetFans Platform\\\" para começar. Caso ainda esteja com dificuldades, fizemos uma página mostrando o passo a passo de como acessar, entre em feetfans.com.br/help e siga as instruções! Me avise se mesmo assim não conseguir acessar.\",\n        \"en\": \"Sure, you need to go to Hotmart website https://consumer.hotmart.com with your purchase email. After login, click 'My purchases' and select 'FeetFans Platform' to start. If you still have trouble, we made a page showing step-by-step how to access: feetfans.com.br/help Follow the instructions! Let me know if you still can't access.\",\n        \"es\": \"Claro, necesitas entrar al sitio web de Hotmart https://consumer.hotmart.com con tu email de compra. Después de iniciar sesión, haz clic en 'Mis compras' y selecciona 'FeetFans Platform' para comenzar. Si aún tienes dificultades, hicimos una página mostrando paso a paso cómo acceder: feetfans.com.br/help ¡Síguelas! Avísame si aún no puedes acceder.\"\n      },\n      \"followup\": {\n        \"pt\": \"Entendi, provavelmente você digitou incorretamente seu email na hora da compra, por isso não está conseguindo acessar. Isso acontece muito! Mas não tem problema, me diga seu email para que eu te dê acesso manualmente.\",\n        \"en\": \"I understand, you probably entered your email incorrectly at the time of purchase, that's why you can't access. This happens a lot! But no problem, tell me your email so I can give you manual access.\",\n        \"es\": \"Entiendo, probablemente ingresaste tu email incorrectamente al momento de la compra, por eso no puedes acceder. ¡Esto pasa mucho! Pero no hay problema, dime tu email para que pueda darte acceso manual.\"\n      }\n    }\n  ],\n  \"generic_response_low_match\": {\n    \"pt\": \"Olá! Recebemos sua mensagem e vamos analisar seu caso com atenção. Retornaremos em breve com uma solução personalizada.\\n\\nEnquanto isso, confira nossa central de ajuda: feetfans.com.br/help\\n\\nAtenciosamente,\\nEquipe FeetFans\",\n    \"en\": \"Hello! We received your message and will analyze your case carefully. We will return shortly with a personalized solution.\\n\\nIn the meantime, check our help center: feetfans.com.br/help\\n\\nBest regards,\\nFeetFans Team\",\n    \"es\": \"¡Hola! Recibimos tu mensaje y vamos a analizar tu caso con atención. Regresaremos pronto con una solución personalizada.\\n\\nMientras tanto, consulta nuestro centro de ayuda: feetfans.com.br/help\\n\\nSaludos,\\nEquipo FeetFans\"\n  }\n};\n\nreturn {\n  faq_database: FAQ_DATABASE,\n  subject: $json.subject,\n  body: $json.body,\n  language: $json.language,\n  from: $json.from,\n  threadId: $json.threadId\n};"
+      },
+      "name": "Load FAQ Database",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// COLE AQUI O CÓDIGO DE n8n-faq-semantic-search.js\n// (código completo já criado)"
+      },
+      "name": "FAQ Semantic Search",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 300],
+      "notes": "Compara email com FAQ usando Gemini API"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "string": [
+                  {
+                    "value1": "={{ $json.threshold_level }}",
+                    "operation": "equals",
+                    "value2": "EXACT"
+                  }
+                ]
+              }
+            },
+            {
+              "conditions": {
+                "string": [
+                  {
+                    "value1": "={{ $json.threshold_level }}",
+                    "operation": "equals",
+                    "value2": "AI_ADAPT"
+                  }
+                ]
+              }
+            },
+            {
+              "conditions": {
+                "string": [
+                  {
+                    "value1": "={{ $json.threshold_level }}",
+                    "operation": "equals",
+                    "value2": "GENERIC"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "name": "Route by Confidence",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// COLE AQUI O CÓDIGO DE n8n-ai-response-adapter.js\n// (código completo já criado)"
+      },
+      "name": "AI Response Adapter",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1450, 400],
+      "notes": "Adapta resposta para confidence 50-79%"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll"
+      },
+      "name": "Merge Responses",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [1650, 300]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.from }}",
+        "subject": "Re: {{ $json.subject }}",
+        "message": "={{ $json.final_response || $json.response }}",
+        "options": {
+          "ccList": "",
+          "bccList": "",
+          "replyTo": "={{ $json.threadId }}",
+          "additionalHeaders": {
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "X-Auto-Responder",
+                  "value": "FeetFans-FAQ-v1"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "name": "Send Gmail Reply",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [1850, 300],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "sbu7IURTjw6qGUTe",
+          "name": "Gmail OAuth2 - feetfansoficial"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// COLE AQUI O CÓDIGO DE n8n-notification-low-confidence.js\n// (código completo já criado)"
+      },
+      "name": "Prepare Notification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1450, 500],
+      "notes": "Prepara notificação para confidence < 50%"
+    },
+    {
+      "parameters": {
+        "sendTo": "gomesfm@gmail.com",
+        "subject": "={{ $json.notification_subject }}",
+        "message": "={{ $json.notification_body }}",
+        "options": {}
+      },
+      "name": "Send Notification to Fábio",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [1650, 500],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "sbu7IURTjw6qGUTe",
+          "name": "Gmail OAuth2 - feetfansoficial"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// COLE AQUI O CÓDIGO DE n8n-auto-learning.js\n// (código completo já criado)"
+      },
+      "name": "Auto-Learning Detector",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 800],
+      "notes": "Detecta respostas manuais e aprende automaticamente"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.learned }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "If Learned",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 800]
+    },
+    {
+      "parameters": {
+        "jsCode": "// COLE AQUI O CÓDIGO DE n8n-save-updated-faq.js\n// (código completo já criado)"
+      },
+      "name": "Save Updated FAQ",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 800]
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "upload",
+        "name": "faq-multilingual.json",
+        "resolveData": true,
+        "options": {}
+      },
+      "name": "Upload to Google Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [1050, 800],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "CONFIGURE_THIS",
+          "name": "Google Drive OAuth2"
+        }
+      },
+      "notes": "Opcional: salvar FAQ atualizado no Google Drive"
+    }
+  ],
+  "connections": {
+    "Gmail Trigger - Inbox": {
+      "main": [[{ "node": "Extract Email Data", "type": "main", "index": 0 }]]
+    },
+    "Extract Email Data": {
+      "main": [[{ "node": "Detect Language", "type": "main", "index": 0 }]]
+    },
+    "Detect Language": {
+      "main": [[{ "node": "Load FAQ Database", "type": "main", "index": 0 }]]
+    },
+    "Load FAQ Database": {
+      "main": [[{ "node": "FAQ Semantic Search", "type": "main", "index": 0 }]]
+    },
+    "FAQ Semantic Search": {
+      "main": [[{ "node": "Route by Confidence", "type": "main", "index": 0 }]]
+    },
+    "Route by Confidence": {
+      "main": [
+        [{ "node": "Merge Responses", "type": "main", "index": 0 }],
+        [{ "node": "AI Response Adapter", "type": "main", "index": 0 }],
+        [
+          { "node": "Merge Responses", "type": "main", "index": 0 },
+          { "node": "Prepare Notification", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "AI Response Adapter": {
+      "main": [[{ "node": "Merge Responses", "type": "main", "index": 0 }]]
+    },
+    "Merge Responses": {
+      "main": [[{ "node": "Send Gmail Reply", "type": "main", "index": 0 }]]
+    },
+    "Prepare Notification": {
+      "main": [[{ "node": "Send Notification to Fábio", "type": "main", "index": 0 }]]
+    },
+    "Gmail Trigger - Sent (Auto-Learning)": {
+      "main": [[{ "node": "Auto-Learning Detector", "type": "main", "index": 0 }]]
+    },
+    "Auto-Learning Detector": {
+      "main": [[{ "node": "If Learned", "type": "main", "index": 0 }]]
+    },
+    "If Learned": {
+      "main": [
+        [{ "node": "Save Updated FAQ", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Save Updated FAQ": {
+      "main": [[{ "node": "Upload to Google Drive", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "v2.0-complete"
+}
