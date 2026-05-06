@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
+import { stripLinksForTrial } from '../utils/link-blocker';
 
 // Initialize Anthropic Claude API
 const anthropic = new Anthropic({
@@ -60,6 +61,13 @@ export async function generateAgentResponse(
       throw new Error(`Failed to fetch creator: ${creatorError.message}`);
     }
 
+    // Strip links from message if creator is on trial
+    // This ensures AI agent never sees links from trial users
+    const processedMessage = stripLinksForTrial(
+      creatorMessage,
+      creator.subscription_status
+    );
+
     // Format conversation history (reverse to chronological order)
     const formattedHistory = (history || [])
       .reverse()
@@ -69,11 +77,11 @@ export async function generateAgentResponse(
       })
       .join('\n');
 
-    // Check if creator message contains a link
+    // Check if original creator message contains a link (before stripping)
     const hasLink = /https?:\/\//.test(creatorMessage);
 
-    // Construct base prompt
-    let prompt = `${agent.personality_prompt}\n\nConversation history:\n${formattedHistory}\n\nCreator said: "${creatorMessage}"\n\nRespond naturally and conversationally (max 75 words).`;
+    // Construct base prompt (use processed message with links stripped for trial users)
+    let prompt = `${agent.personality_prompt}\n\nConversation history:\n${formattedHistory}\n\nCreator said: "${processedMessage}"\n\nRespond naturally and conversationally (max 75 words).`;
 
     // Add link handling instructions
     if (hasLink && creator.subscription_status === 'trial') {
