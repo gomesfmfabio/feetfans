@@ -24,8 +24,8 @@ export default function CheckoutPage() {
         return;
       }
 
-      // Call backend to upgrade subscription
-      const response = await fetch('/api/subscriptions/upgrade', {
+      // Create Stripe checkout session
+      const response = await fetch('/api/subscriptions/create-checkout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -34,11 +34,13 @@ export default function CheckoutPage() {
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || 'Failed to upgrade subscription');
+        throw new Error(data.error || 'Failed to create checkout session');
       }
 
-      // Redirect to dashboard with success message
-      router.push('/dashboard?upgrade=success');
+      const { url } = await response.json();
+
+      // Redirect to Stripe checkout
+      window.location.href = url;
     } catch (err: any) {
       console.error('Upgrade error:', err);
       setError(err.message || 'Payment failed. Please try again.');
@@ -149,7 +151,7 @@ export default function CheckoutPage() {
         </button>
 
         <p className="text-xs text-gray-500 text-center mt-4">
-          Simplified checkout for development. Stripe integration coming soon.
+          Secure payment powered by Stripe. Your card info is never stored on our servers.
         </p>
 
         <p className="text-xs text-gray-500 text-center mt-2">
