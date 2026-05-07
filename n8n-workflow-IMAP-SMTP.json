@@ -1,0 +1,164 @@
+{
+  "name": "FeetFans Auto-Responder IMAP/SMTP",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute",
+              "minute": 5
+            }
+          ]
+        },
+        "mailbox": "INBOX",
+        "options": {
+          "allowUnauthorizedCerts": false
+        }
+      },
+      "name": "IMAP Email Trigger",
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2,
+      "position": [
+        250,
+        300
+      ],
+      "credentials": {
+        "imap": {
+          "name": "Gmail IMAP - feetfansoficial"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * N8N Node: Detect Language & Prepare Data\n * \n * Detecta o idioma do email (pt/en/es) baseado em keywords\n * e prepara os dados para o próximo node\n */\n\nconst subject = $json.subject || '';\nconst body = $json.text || $json.html || $json.textPlain || '';\nconst from = $json.from?.address || $json.from || '';\n\n// Detect language based on common keywords\nfunction detectLanguage(text) {\n  const textLower = text.toLowerCase();\n  \n  const ptKeywords = ['olá', 'não', 'obrigad', 'preciso', 'ajuda', 'como', 'onde', 'posso'];\n  const esKeywords = ['hola', 'gracias', 'ayuda', 'necesito', 'cómo', 'dónde', 'puedo'];\n  const enKeywords = ['hello', 'thanks', 'help', 'need', 'how', 'where', 'can'];\n  \n  let ptScore = 0;\n  let esScore = 0;\n  let enScore = 0;\n  \n  ptKeywords.forEach(kw => { if (textLower.includes(kw)) ptScore++; });\n  esKeywords.forEach(kw => { if (textLower.includes(kw)) esScore++; });\n  enKeywords.forEach(kw => { if (textLower.includes(kw)) enScore++; });\n  \n  if (ptScore > esScore && ptScore > enScore) return 'pt';\n  if (esScore > ptScore && esScore > enScore) return 'es';\n  return 'en';\n}\n\nconst language = detectLanguage(`${subject} ${body}`);\n\nreturn {\n  subject: subject,\n  body: body,\n  from: from,\n  language: language,\n  messageId: $json.messageId || '',\n  date: $json.date || new Date().toISOString()\n};"
+      },
+      "name": "Detect Language",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * N8N Node: Load FAQ Database\n *\n * Carrega o banco de dados de FAQ completo (todos os 20 FAQs)\n * Este código deve ser colado no node \"Load FAQ Database\" do workflow\n */\n\nconst FAQ_DATABASE = {\n  \"version\": \"1.0\",\n  \"languages\": [\"pt\", \"en\", \"es\"],\n  \"last_updated\": \"2026-05-05\",\n  \"faqs\": [\n    {\n      \"id\": \"FAQ-001\",\n      \"category\": \"greeting\",\n      \"keywords_multilingual\": [\"hi\", \"hello\", \"hola\", \"oi\", \"hey\", \"olá\"],\n      \"responses\": {\n        \"pt\": \"Olá! Bem-vinda ao FeetFans ❤️👣\",\n        \"en\": \"Hello! Welcome to FeetFans ❤️👣\",\n        \"es\": \"¡Hola! Bienvenida a FeetFans ❤️👣\"\n      },\n      \"requires_followup\": true\n    },\n    {\n      \"id\": \"FAQ-002\",\n      \"category\": \"access\",\n      \"keywords_multilingual\": [\"can't access\", \"não consigo acessar\", \"no puedo acceder\", \"find course\", \"encontrar curso\", \"hotmart\", \"login\"],\n      \"responses\": {\n        \"pt\": \"Certo, você precisa entrar no site da Hotmart https://consumer.hotmart.com com o seu email de compra. Após fazer login, clique em \\\"Minhas compras\\\" e selecione \\\"FeetFans Platform\\\" para começar. Caso ainda esteja com dificuldades, fizemos uma página mostrando o passo a passo de como acessar, entre em feetfans.com.br/help e siga as instruções! Me avise se mesmo assim não conseguir acessar.\",\n        \"en\": \"Sure, you need to go to Hotmart website https://consumer.hotmart.com with your purchase email. After login, click 'My purchases' and select 'FeetFans Platform' to start. If you still have trouble, we made a page showing step-by-step how to access: feetfans.com.br/help Follow the instructions! Let me know if you still can't access.\",\n        \"es\": \"Claro, necesitas entrar al sitio web de Hotmart https://consumer.hotmart.com con tu email de compra. Después de iniciar sesión, haz clic en 'Mis compras' y selecciona 'FeetFans Platform' para comenzar. Si aún tienes dificultades, hicimos una página mostrando paso a paso cómo acceder: feetfans.com.br/help ¡Síguelas! Avísame si aún no puedes acceder.\"\n      },\n      \"followup\": {\n        \"pt\": \"Entendi, provavelmente você digitou incorretamente seu email na hora da compra, por isso não está conseguindo acessar. Isso acontece muito! Mas não tem problema, me diga seu email para que eu te dê acesso manualmente.\",\n        \"en\": \"I understand, you probably entered your email incorrectly at the time of purchase, that's why you can't access. This happens a lot! But no problem, tell me your email so I can give you manual access.\",\n        \"es\": \"Entiendo, probablemente ingresaste tu email incorrectamente al momento de la compra, por eso no puedes acceder. ¡Esto pasa mucho! Pero no hay problema, dime tu email para que pueda darte acceso manual.\"\n      }\n    },\n    {\n      \"id\": \"FAQ-007\",\n      \"category\": \"legitimacy\",\n      \"keywords_multilingual\": [\"real\", \"legitimate\", \"funciona\", \"verdade\", \"ganhar dinheiro\", \"works\", \"es real\", \"legítimo\"],\n      \"responses\": {\n        \"pt\": \"Você deve ter visto todos os relatos de mulheres que estão entrando nesse mercado, e isso não é a toa, pois tem gerado resultados reais. Mas para isso, precisa seguir um método, pois não basta subir fotos e esperar, isso é o maior erro achar que é só isso. Existem algumas estratégias e dicas muito importantes sobre quais poses fazer, como atrair compradores sem fazer quase nada, como deixar esse projeto rodando no automático, etc. Por isso recomendamos fortemente você assistir as aulas que estão na área de membros.\",\n        \"en\": \"You must have seen all the reports of women entering this market, and this is not for nothing, as it has been generating real results. But for this, you need to follow a method, because it's not enough to just upload photos and wait, the biggest mistake is thinking that's all there is to it. There are some very important strategies and tips on what poses to do, how to attract buyers without doing almost anything, how to keep this project running on autopilot, etc. That's why we strongly recommend you watch the lessons in the members area.\",\n        \"es\": \"Debes haber visto todos los informes de mujeres que están ingresando a este mercado, y esto no es en vano, ya que ha estado generando resultados reales. Pero para esto, necesitas seguir un método, porque no basta con subir fotos y esperar, el mayor error es pensar que eso es todo. Hay algunas estrategias y consejos muy importantes sobre qué poses hacer, cómo atraer compradores sin hacer casi nada, cómo mantener este proyecto funcionando en automático, etc. Por eso recomendamos encarecidamente que veas las lecciones en el área de miembros.\"\n      }\n    },\n    {\n      \"id\": \"FAQ-012\",\n      \"category\": \"how_to_start\",\n      \"keywords_multilingual\": [\"how start\", \"como começar\", \"cómo empezar\", \"where begin\", \"por onde começar\", \"por dónde empezar\"],\n      \"responses\": {\n        \"pt\": \"A gente recomenda fortemente você assistir as aulas da area de membros e seguir o nosso passo a passo, pois foi pensado para trazer resultados mais rápidos! Porém você pode começar agora mesmo subindo suas fotos no site funwithfeet.com mas como você vai fazer isso sem as estratégias que ensinamos, pode ser que demore alguns dias até aparecer compradores, mas não se preocupe, pois isso é normal!\",\n        \"en\": \"We strongly recommend you watch the lessons in the members area and follow our step-by-step, as it was designed to bring faster results! However, you can start right now by uploading your photos to the funwithfeet.com website, but since you'll be doing this without the strategies we teach, it may take a few days for buyers to appear, but don't worry, this is normal!\",\n        \"es\": \"¡Recomendamos encarecidamente que veas las lecciones en el área de miembros y sigas nuestro paso a paso, ya que fue diseñado para traer resultados más rápidos! Sin embargo, puedes comenzar ahora mismo subiendo tus fotos al sitio web funwithfeet.com, pero como lo harás sin las estrategias que enseñamos, puede que tarde algunos días hasta que aparezcan compradores, ¡pero no te preocupes, esto es normal!\"\n      }\n    },\n    {\n      \"id\": \"FAQ-019\",\n      \"category\": \"generic_help\",\n      \"keywords_multilingual\": [\"need help\", \"preciso ajuda\", \"necesito ayuda\", \"help me\", \"confuso\", \"confundido\"],\n      \"responses\": {\n        \"pt\": \"Como eu posso te ajudar?\",\n        \"en\": \"How can I help you?\",\n        \"es\": \"¿Cómo puedo ayudarte?\"\n      },\n      \"followup\": {\n        \"pt\": \"Preparei um guia passo a passo que pode te ajudar, acesse feetfans.com.br/help Leia até o final, pois sua dúvida pode estar respondida lá! Assista também aos vídeos :)\",\n        \"en\": \"I prepared a step-by-step guide that can help you, go to feetfans.com.br/help Read to the end, as your question may be answered there! Also watch the videos :)\",\n        \"es\": \"Preparé una guía paso a paso que puede ayudarte, accede a feetfans.com.br/help ¡Lee hasta el final, ya que tu pregunta puede estar respondida allí! También mira los videos :)\"\n      }\n    }\n  ],\n  \"generic_response_low_match\": {\n    \"pt\": \"Olá! Recebemos sua mensagem e vamos analisar seu caso com atenção. Retornaremos em breve com uma solução personalizada.\\n\\nEnquanto isso, confira nossa central de ajuda: feetfans.com.br/help\\n\\nAtenciosamente,\\nEquipe FeetFans\",\n    \"en\": \"Hello! We received your message and will analyze your case carefully. We will return shortly with a personalized solution.\\n\\nIn the meantime, check our help center: feetfans.com.br/help\\n\\nBest regards,\\nFeetFans Team\",\n    \"es\": \"¡Hola! Recibimos tu mensaje y vamos a analizar tu caso con atención. Regresaremos pronto con una solución personalizada.\\n\\nMientras tanto, consulta nuestro centro de ayuda: feetfans.com.br/help\\n\\nSaludos,\\nEquipo FeetFans\"\n  }\n};\n\n// Retorna FAQ database + dados do email\nreturn {\n  faq_database: FAQ_DATABASE,\n  subject: $json.subject,\n  body: $json.body,\n  language: $json.language,\n  from: $json.from,\n  messageId: $json.messageId,\n  date: $json.date\n};\n"
+      },
+      "name": "Load FAQ",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * N8N Node: FAQ Semantic Search with Gemini\n *\n * Compara o email recebido com o banco de FAQs usando Google Gemini\n * Retorna a melhor correspondência e score de similaridade\n *\n * INPUT (from previous node):\n *   - subject: string\n *   - body: string\n *   - language: 'pt' | 'en' | 'es'\n *\n * OUTPUT:\n *   - matched: boolean\n *   - confidence: number (0-100)\n *   - faq_id: string | null\n *   - response: string | null\n *   - requires_followup: boolean\n *   - threshold_level: 'EXACT' | 'AI_ADAPT' | 'GENERIC'\n */\n\nconst GEMINI_API_KEY = 'AIzaSyC1HB4x_31p7Q6rQx_4_KNq5HrEJQ2hHDA';\nconst GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';\n\n// Thresholds\nconst THRESHOLD_EXACT = 80;\nconst THRESHOLD_AI = 50;\n\n// Load FAQ database\nconst FAQ_DATABASE = $input.first().json.faq_database; // Passed from previous node\n\n// Get input email\nconst emailSubject = $input.first().json.subject || '';\nconst emailBody = $input.first().json.body || '';\nconst detectedLanguage = $input.first().json.language || 'pt';\nconst emailFrom = $input.first().json.from || '';\nconst messageId = $input.first().json.messageId || '';\n\n// Combine subject + body for analysis\nconst emailText = `${emailSubject}\\n\\n${emailBody}`;\n\n/**\n * Call Gemini API to calculate similarity between email and FAQ\n */\nasync function calculateSimilarity(emailText, faqEntry, language) {\n  const prompt = `You are a semantic similarity analyzer for customer support emails.\n\nTASK: Compare the customer's email with a FAQ entry and return ONLY a similarity score from 0 to 100.\n\nCUSTOMER EMAIL:\n${emailText}\n\nFAQ ENTRY:\nCategory: ${faqEntry.category}\nKeywords: ${faqEntry.keywords_multilingual.join(', ')}\nQuestion Context: ${faqEntry.responses[language].substring(0, 200)}\n\nINSTRUCTIONS:\n- Return ONLY a number from 0 to 100\n- 100 = Perfect match (customer asking exactly this question)\n- 80-99 = Very similar (same topic, slightly different wording)\n- 50-79 = Related (same general area, needs adaptation)\n- 0-49 = Different topic\n\nRESPOND WITH ONLY THE NUMBER:`;\n\n  try {\n    const response = await fetch(GEMINI_API_URL + `?key=${GEMINI_API_KEY}`, {\n      method: 'POST',\n      headers: {\n        'Content-Type': 'application/json',\n      },\n      body: JSON.stringify({\n        contents: [{\n          parts: [{\n            text: prompt\n          }]\n        }],\n        generationConfig: {\n          temperature: 0.1,\n          maxOutputTokens: 10,\n        }\n      })\n    });\n\n    const data = await response.json();\n    const scoreText = data.candidates[0].content.parts[0].text.trim();\n    const score = parseInt(scoreText.replace(/[^0-9]/g, ''));\n\n    return isNaN(score) ? 0 : Math.min(100, Math.max(0, score));\n  } catch (error) {\n    console.error('Gemini API Error:', error);\n    return 0;\n  }\n}\n\n/**\n * Main execution\n */\nasync function findBestFAQMatch() {\n  const results = [];\n\n  // Calculate similarity for each FAQ entry\n  for (const faq of FAQ_DATABASE.faqs) {\n    const score = await calculateSimilarity(emailText, faq, detectedLanguage);\n\n    results.push({\n      faq_id: faq.id,\n      category: faq.category,\n      score: score,\n      response: faq.responses[detectedLanguage],\n      requires_followup: faq.requires_followup || false,\n      followup_response: faq.followup ? faq.followup[detectedLanguage] : null\n    });\n  }\n\n  // Sort by score descending\n  results.sort((a, b) => b.score - a.score);\n\n  // Get best match\n  const bestMatch = results[0];\n\n  // Determine threshold level\n  let thresholdLevel;\n  let matched;\n  let finalResponse;\n\n  if (bestMatch.score >= THRESHOLD_EXACT) {\n    // ≥80% - Use exact FAQ response\n    thresholdLevel = 'EXACT';\n    matched = true;\n    finalResponse = bestMatch.response;\n  } else if (bestMatch.score >= THRESHOLD_AI) {\n    // 50-79% - AI will adapt the response\n    thresholdLevel = 'AI_ADAPT';\n    matched = true;\n    finalResponse = bestMatch.response; // Base response for AI to adapt\n  } else {\n    // <50% - Generic response + notify user\n    thresholdLevel = 'GENERIC';\n    matched = false;\n    finalResponse = FAQ_DATABASE.generic_response_low_match[detectedLanguage];\n  }\n\n  return {\n    matched: matched,\n    confidence: bestMatch.score,\n    faq_id: matched ? bestMatch.faq_id : null,\n    category: matched ? bestMatch.category : 'UNKNOWN',\n    response: finalResponse,\n    requires_followup: matched ? bestMatch.requires_followup : false,\n    followup_response: matched ? bestMatch.followup_response : null,\n    threshold_level: thresholdLevel,\n    all_scores: results.slice(0, 3), // Top 3 matches for debugging\n    language: detectedLanguage,\n    original_email: emailText,\n    notify_human: !matched, // Notify if confidence < 50%\n    from: emailFrom,\n    messageId: messageId,\n    subject: emailSubject\n  };\n}\n\n// Execute and return\nreturn await findBestFAQMatch();\n"
+      },
+      "name": "Search FAQ",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        850,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * N8N Node: AI Response Adapter\n *\n * Quando o threshold é AI_ADAPT (50-79% similaridade),\n * usa Gemini para adaptar a resposta do FAQ ao contexto específico do email\n *\n * INPUT (from previous node):\n *   - threshold_level: string\n *   - faq_response: string\n *   - original_email: string\n *   - language: string\n *   - conversation_history: array (opcional, para followup)\n *\n * OUTPUT:\n *   - final_response: string (adapted response)\n */\n\nconst GEMINI_API_KEY = 'AIzaSyC1HB4x_31p7Q6rQx_4_KNq5HrEJQ2hHDA';\nconst GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';\n\n// Get input\nconst thresholdLevel = $input.first().json.threshold_level;\nconst faqResponse = $input.first().json.response;\nconst originalEmail = $input.first().json.original_email;\nconst language = $input.first().json.language;\nconst conversationHistory = $input.first().json.conversation_history || [];\nconst emailFrom = $input.first().json.from;\nconst emailSubject = $input.first().json.subject;\n\n// If EXACT threshold, no adaptation needed\nif (thresholdLevel === 'EXACT' || thresholdLevel === 'GENERIC') {\n  return {\n    final_response: faqResponse,\n    adapted: false,\n    from: emailFrom,\n    subject: emailSubject\n  };\n}\n\n/**\n * Adapt FAQ response using Gemini\n */\nasync function adaptResponse() {\n  const languageNames = {\n    'pt': 'Portuguese',\n    'en': 'English',\n    'es': 'Spanish'\n  };\n\n  let historyContext = '';\n  if (conversationHistory.length > 0) {\n    historyContext = `\\n\\nCONVERSATION HISTORY:\\n${conversationHistory.map(msg =>\n      `${msg.from}: ${msg.text}`\n    ).join('\\n')}`;\n  }\n\n  const prompt = `You are a customer support agent for FeetFans Platform.\n\nTASK: Adapt the FAQ response below to specifically answer the customer's email. Maintain the same helpful tone and information, but personalize it to their specific question.\n\nCUSTOMER EMAIL:\n${originalEmail}\n${historyContext}\n\nFAQ BASE RESPONSE (to adapt):\n${faqResponse}\n\nINSTRUCTIONS:\n1. Keep all URLs, prices, and specific instructions EXACTLY as they appear\n2. Maintain the helpful, friendly tone\n3. Address the customer's specific concern\n4. Keep the response in ${languageNames[language]}\n5. Do NOT add emojis if they're not in the original\n6. Do NOT add information not present in the FAQ response\n7. If this is a followup message, reference the conversation history naturally\n\nRESPOND WITH THE ADAPTED MESSAGE:`;\n\n  try {\n    const response = await fetch(GEMINI_API_URL + `?key=${GEMINI_API_KEY}`, {\n      method: 'POST',\n      headers: {\n        'Content-Type': 'application/json',\n      },\n      body: JSON.stringify({\n        contents: [{\n          parts: [{\n            text: prompt\n          }]\n        }],\n        generationConfig: {\n          temperature: 0.7,\n          maxOutputTokens: 500,\n        }\n      })\n    });\n\n    const data = await response.json();\n    const adaptedText = data.candidates[0].content.parts[0].text.trim();\n\n    return {\n      final_response: adaptedText,\n      adapted: true,\n      original_faq_response: faqResponse,\n      from: emailFrom,\n      subject: emailSubject\n    };\n  } catch (error) {\n    console.error('Gemini API Error:', error);\n    // Fallback to original FAQ response\n    return {\n      final_response: faqResponse,\n      adapted: false,\n      error: error.message,\n      from: emailFrom,\n      subject: emailSubject\n    };\n  }\n}\n\n// Execute and return\nreturn await adaptResponse();\n"
+      },
+      "name": "Adapt Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1050,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "feetfansoficial@gmail.com",
+        "toEmail": "={{ $json.from }}",
+        "subject": "=Re: {{ $json.subject }}",
+        "text": "={{ $json.final_response }}",
+        "options": {
+          "allowUnauthorizedCerts": false
+        }
+      },
+      "name": "Send Reply",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [
+        1250,
+        300
+      ],
+      "credentials": {
+        "smtp": {
+          "name": "Gmail SMTP - feetfansoficial"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "IMAP Email Trigger": {
+      "main": [
+        [
+          {
+            "node": "Detect Language",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect Language": {
+      "main": [
+        [
+          {
+            "node": "Load FAQ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load FAQ": {
+      "main": [
+        [
+          {
+            "node": "Search FAQ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search FAQ": {
+      "main": [
+        [
+          {
+            "node": "Adapt Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Adapt Response": {
+      "main": [
+        [
+          {
+            "node": "Send Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "imap-smtp-v1"
+}
