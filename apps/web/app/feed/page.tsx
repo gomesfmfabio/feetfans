@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@/lib/supabase-browser';
 
 const CATEGORIES = [
   'Barefoot', 'Heels', 'Socks', 'Stockings', 'Nail Polish',

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { createBrowserClient } from '@/lib/supabase-browser';
+import { supabase } from '@/lib/supabase-browser';
 
 export default function EditProfilePage() {
   const router = useRouter();

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { createBrowserClient } from '@/lib/supabase-browser';
+import { supabase } from '@/lib/supabase-browser';
 import Link from 'next/link';
 
 export default function ResetPasswordPage() {

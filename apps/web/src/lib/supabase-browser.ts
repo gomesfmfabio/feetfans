@@ -15,3 +15,9 @@ export function createBrowserClient() {
     },
   });
 }
+
+/**
+ * Singleton instance for convenience
+ * Use this for simple cases where you don't need custom config
+ */
+export const supabase = createBrowserClient();

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSwipeable } from 'react-swipeable';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@/lib/supabase-browser';
 
 const CATEGORIES = [
   'All',
