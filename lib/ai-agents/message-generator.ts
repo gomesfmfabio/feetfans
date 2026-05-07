@@ -1,10 +1,9 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Anthropic Claude API
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || '',
-});
+// Initialize Google Gemini API
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
 
 // Rate limiting: track message generation timestamps
 const messageTimestamps: number[] = [];
@@ -70,34 +69,27 @@ export async function generateAgentMessage(
         ? `${agent.personality_prompt}\n\nThe creator has posted content in these categories: ${categories}.\n\nWrite a brief, friendly opening message (max 50 words) expressing interest in their content. Do not reveal you are AI. Be casual and natural.`
         : `${agent.personality_prompt}\n\nThis is a new creator who hasn't posted content yet.\n\nWrite a brief, friendly opening message (max 50 words) introducing yourself and expressing interest in their future content. Do not reveal you are AI. Be casual and natural.`;
 
-      // Call Claude Haiku API
-      const response = await anthropic.messages.create({
-        model: 'claude-3-haiku-20240307',
-        max_tokens: 100,
-        temperature: 0.8, // Add variety to responses
-        messages: [
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
+      // Call Gemini 2.0 Flash API
+      const result = await model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: {
+          maxOutputTokens: 100,
+          temperature: 0.8, // Add variety to responses
+        },
       });
 
-      // Extract message text
-      const messageText =
-        response.content[0].type === 'text'
-          ? response.content[0].text
-          : '';
+      const response = result.response;
+      const messageText = response.text();
 
       if (!messageText) {
-        throw new Error('Empty response from Claude API');
+        throw new Error('Empty response from Gemini API');
       }
 
       // Log token usage for cost tracking
-      const totalTokens =
-        response.usage.input_tokens + response.usage.output_tokens;
+      const usage = response.usageMetadata;
+      const totalTokens = (usage?.totalTokenCount || 0);
       console.log(
-        `[AI Agent Message] Agent: ${agent.nickname}, Tokens: ${totalTokens}, Input: ${response.usage.input_tokens}, Output: ${response.usage.output_tokens}`
+        `[AI Agent Message] Agent: ${agent.nickname}, Tokens: ${totalTokens}, Input: ${usage?.promptTokenCount || 0}, Output: ${usage?.candidatesTokenCount || 0}`
       );
 
       // Validate token usage target (<500 tokens)

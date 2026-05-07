@@ -1,11 +1,10 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createClient } from '@supabase/supabase-js';
 import { stripLinksForTrial } from '../utils/link-blocker';
 
-// Initialize Anthropic Claude API
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || '',
-});
+// Initialize Google Gemini API
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
 
 /**
  * Generate AI agent response to creator message
@@ -96,34 +95,27 @@ export async function generateAgentResponse(
     prompt +=
       "\n\nIMPORTANT: You are NOT a buyer. NEVER agree to purchase content, NEVER ask for payment details, NEVER share payment information. If asked about buying, politely say you're just browsing/chatting for now.";
 
-    // Call Claude Haiku API
-    const response = await anthropic.messages.create({
-      model: 'claude-3-haiku-20240307',
-      max_tokens: 150,
-      temperature: 0.8, // Add variety
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
+    // Call Gemini 2.0 Flash API
+    const result = await model.generateContent({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: {
+        maxOutputTokens: 150,
+        temperature: 0.8, // Add variety
+      },
     });
 
-    // Extract response text
-    const responseText =
-      response.content[0].type === 'text'
-        ? response.content[0].text
-        : '';
+    const response = result.response;
+    const responseText = response.text();
 
     if (!responseText) {
-      throw new Error('Empty response from Claude API');
+      throw new Error('Empty response from Gemini API');
     }
 
     // Log token usage for cost tracking
-    const totalTokens =
-      response.usage.input_tokens + response.usage.output_tokens;
+    const usage = response.usageMetadata;
+    const totalTokens = (usage?.totalTokenCount || 0);
     console.log(
-      `[AI Agent Response] Agent: ${agent.nickname}, Tokens: ${totalTokens}, Input: ${response.usage.input_tokens}, Output: ${response.usage.output_tokens}`
+      `[AI Agent Response] Agent: ${agent.nickname}, Tokens: ${totalTokens}, Input: ${usage?.promptTokenCount || 0}, Output: ${usage?.candidatesTokenCount || 0}`
     );
 
     // Validate token usage target (<500 tokens)
