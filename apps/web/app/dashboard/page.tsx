@@ -9,7 +9,6 @@ import Link from 'next/link';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const supabase = createBrowserClient();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
 

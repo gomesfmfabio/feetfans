@@ -7,7 +7,6 @@ import Link from 'next/link';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
-  const supabase = createBrowserClient();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>(null);
 

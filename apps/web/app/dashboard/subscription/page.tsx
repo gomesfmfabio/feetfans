@@ -7,7 +7,6 @@ import Link from 'next/link';
 
 export default function SubscriptionManagementPage() {
   const router = useRouter();
-  const supabase = createBrowserClient();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [openingPortal, setOpeningPortal] = useState(false);
