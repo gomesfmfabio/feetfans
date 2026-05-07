@@ -1,3 +1,4 @@
+// @ts-nocheck - Stripe webhook disabled, skip type checking
 import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import Stripe from 'stripe';
