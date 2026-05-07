@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { generateAgentMessage } from '../../../../../../lib/ai-agents/message-generator';
+import { generateAgentMessage } from '@/lib/ai-agents/message-generator';
 
 // Cron job endpoint to process due AI agent assignments
 // Run hourly to check for assignments where scheduled_for <= NOW()

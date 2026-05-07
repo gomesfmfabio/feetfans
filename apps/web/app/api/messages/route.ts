@@ -206,10 +206,7 @@ export async function POST(request: NextRequest) {
       .eq('id', conversationId);
 
     // Check if recipient is an AI agent and trigger automatic response
-    const recipientId =
-      conversation.creator_id === session.user.id
-        ? conversation.consumer_id
-        : conversation.creator_id;
+    // recipientId already declared above (line 140)
 
     // Check if recipient is an AI agent (exists in ai_agents table)
     const { data: isAgent } = await supabase
