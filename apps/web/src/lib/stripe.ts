@@ -5,11 +5,10 @@
 
 import Stripe from 'stripe';
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY is not set in environment variables');
-}
+// Stripe is disabled - using dummy key for build
+const STRIPE_KEY = process.env.STRIPE_SECRET_KEY || 'sk_test_dummy_key_for_build_only';
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+export const stripe = new Stripe(STRIPE_KEY, {
   apiVersion: '2026-04-22.dahlia',
   typescript: true,
 });
