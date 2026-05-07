@@ -9,7 +9,7 @@ const supabaseAdmin = createClient(
 );
 
 export async function GET(request: NextRequest) {
-  const supabase = createServerClient();
+  const supabase = await createServerClient();
 
   try {
     const { data: { session } } = await supabase.auth.getSession();

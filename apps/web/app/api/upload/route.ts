@@ -4,7 +4,7 @@ import { parseSupabaseError } from '@/lib/errors';
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createServerClient();
+    const supabase = await createServerClient();
 
     // Check auth
     const { data: { session } } = await supabase.auth.getSession();

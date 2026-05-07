@@ -3,7 +3,7 @@ import { createServerClient } from '@/lib/supabase-server';
 import { createBillingPortalSession } from '@/lib/stripe';
 
 export async function POST(request: NextRequest) {
-  const supabase = createServerClient();
+  const supabase = await createServerClient();
 
   try {
     // Get session
