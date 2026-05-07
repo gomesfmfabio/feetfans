@@ -7,7 +7,7 @@
     "GEMINI_API_KEY",
     "NEXT_PUBLIC_APP_URL"
   ],
-  "pipeline": {
+  "tasks": {
     "build": {
       "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"],
