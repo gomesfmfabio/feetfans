@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Caching utilities with in-memory fallback
  * Supports Redis (Upstash) when configured

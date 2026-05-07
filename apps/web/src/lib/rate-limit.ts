@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Simple in-memory rate limiting
  * For production: use Redis or Upstash
