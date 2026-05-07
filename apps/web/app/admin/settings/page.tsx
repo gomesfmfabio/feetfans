@@ -9,7 +9,6 @@ export default function AdminSettingsPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [flags, setFlags] = useState<Record<string, boolean>>(featureFlags);
-  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     checkAdmin();

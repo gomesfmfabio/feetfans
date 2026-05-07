@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
-import { generateAgentResponse } from '../../../../lib/ai-agents/response-generator';
-import { checkFeatureAccess } from '../../../../lib/middleware/feature-gating';
+import { generateAgentResponse } from '@/lib/ai-agents/response-generator';
+import { checkFeatureAccess } from '@/lib/middleware/feature-gating';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 

@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createBrowserClient } from '@/lib/supabase-browser';
 import Link from 'next/link';
 
 export default function ResetPasswordPage() {
-  const supabase = createClientComponentClient();
+  const supabase = createBrowserClient();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
