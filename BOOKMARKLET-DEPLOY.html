@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>N8N Auto-Deploy - Bookmarklet</title>
+  <style>
+    body {
+      font-family: monospace;
+      padding: 40px;
+      background: #1a1a1a;
+      color: #00ff00;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #000;
+      padding: 30px;
+      border: 2px solid #00ff00;
+    }
+    h1 {
+      color: #00ff00;
+      text-align: center;
+    }
+    .bookmarklet {
+      background: #222;
+      padding: 20px;
+      margin: 20px 0;
+      border: 1px solid #444;
+      word-wrap: break-word;
+    }
+    .instructions {
+      background: #1a1a1a;
+      padding: 15px;
+      margin: 20px 0;
+      border-left: 4px solid #00ff00;
+    }
+    a {
+      color: #00ff00;
+      text-decoration: none;
+      font-weight: bold;
+      padding: 10px 20px;
+      border: 2px solid #00ff00;
+      display: inline-block;
+      margin: 10px 0;
+    }
+    a:hover {
+      background: #00ff00;
+      color: #000;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🚀 N8N AUTO-DEPLOY BOOKMARKLET</h1>
+
+    <div class="instructions">
+      <h2>📋 COMO USAR:</h2>
+      <ol>
+        <li>Arraste o botão verde abaixo para sua barra de favoritos</li>
+        <li>Acesse https://n8n.feetstars.online e faça login</li>
+        <li>Click no favorito "🚀 Deploy N8N"</li>
+        <li>Aguarde a mágica acontecer!</li>
+      </ol>
+    </div>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="javascript:(function(){const w=JSON.parse(atob('WORKFLOW_BASE64'));fetch('/rest/workflows',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(w),credentials:'include'}).then(r=>r.json()).then(d=>{alert('✅ Workflow importado! ID: '+d.id);window.location.href='/workflow/'+d.id;}).catch(e=>alert('❌ Erro: '+e));})();">
+        🚀 Deploy N8N
+      </a>
+    </div>
+
+    <div class="instructions">
+      <h2>🔧 ALTERNATIVA - COPIAR E COLAR NO CONSOLE:</h2>
+      <p>Se bookmarklet não funcionar, copie o código abaixo, cole no Console (F12) do browser estando logado no N8N:</p>
+    </div>
+
+    <div class="bookmarklet" id="console-code">
+      <pre>
+// ═══════════════════════════════════════════════════════════════
+// 🚀 N8N AUTO-DEPLOY VIA CONSOLE
+// ═══════════════════════════════════════════════════════════════
+
+console.log('🚀 Iniciando deploy automatizado...');
+
+// Workflow completo (base64 encoded)
+const workflowBase64 = 'WORKFLOW_BASE64_PLACEHOLDER';
+
+// Decode
+const workflowJSON = JSON.parse(atob(workflowBase64));
+
+console.log('📝 Workflow:', workflowJSON.name);
+console.log('📊 Nodes:', workflowJSON.nodes.length);
+
+// Import via API
+fetch('/rest/workflows', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(workflowJSON),
+  credentials: 'include'
+})
+.then(response => response.json())
+.then(data => {
+  console.log('✅ Workflow importado!');
+  console.log('   ID:', data.id);
+  console.log('   Nome:', data.name);
+
+  // Redirecionar para o workflow
+  alert('✅ Deploy completo! Redirecionando...');
+  window.location.href = '/workflow/' + data.id;
+})
+.catch(error => {
+  console.error('❌ Erro:', error);
+  alert('❌ Erro ao importar workflow. Ver console para detalhes.');
+});
+      </pre>
+    </div>
+
+    <div class="instructions">
+      <h2>📋 PASSO A PASSO COMPLETO:</h2>
+      <ol>
+        <li><strong>Abra N8N:</strong> https://n8n.feetstars.online</li>
+        <li><strong>Faça Login:</strong> admin@feetstars.com / E1g9m8d9un!</li>
+        <li><strong>Abra Console:</strong> F12 → Aba "Console"</li>
+        <li><strong>Cole o código acima</strong></li>
+        <li><strong>Pressione ENTER</strong></li>
+        <li><strong>Aguarde:</strong> Workflow será importado e você será redirecionado</li>
+        <li><strong>Ative:</strong> Click em "Active" no workflow</li>
+      </ol>
+    </div>
+
+    <div class="instructions" style="border-left-color: #ff0000;">
+      <h2>⚠️  IMPORTANTE:</h2>
+      <ul>
+        <li>Você DEVE estar logado no N8N antes de executar</li>
+        <li>O workflow será importado com TODOS os códigos já configurados</li>
+        <li>Nenhuma configuração adicional necessária</li>
+        <li>Apenas ativar após importação</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <script>
+    // Substituir placeholder com workflow real
+    const workflowJSON = JSON.stringify(JSON.parse(`WORKFLOW_JSON_PLACEHOLDER`));
+    const workflowBase64 = btoa(workflowJSON);
+
+    // Atualizar no código
+    document.getElementById('console-code').innerHTML = document.getElementById('console-code').innerHTML
+      .replace(/WORKFLOW_BASE64_PLACEHOLDER/g, workflowBase64);
+
+    // Atualizar bookmarklet
+    const bookmarkletLinks = document.querySelectorAll('a[href*="javascript:"]');
+    bookmarkletLinks.forEach(link => {
+      link.href = link.href.replace(/WORKFLOW_BASE64/g, workflowBase64);
+    });
+  </script>
+</body>
+</html>
