@@ -6,20 +6,20 @@ const nextConfig = {
       bodySizeLimit: '2mb',
     },
   },
-  
+
   // Skip type checking during build (we do it separately)
   typescript: {
     ignoreBuildErrors: true,
   },
-  
+
   // Skip ESLint during build
   eslint: {
     ignoreDuringBuilds: true,
   },
-  
-  // Enable SWC minification
-  swcMinify: true,
-  
+
+  // Force dynamic rendering for all pages
+  output: 'standalone',
+
   // Image optimization
   images: {
     domains: ['localhost', 'kyuojnabfherpqmgrmol.supabase.co'],
