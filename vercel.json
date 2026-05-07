@@ -10,7 +10,7 @@
     },
     {
       "path": "/api/ai-agents/cron/process-assignments",
-      "schedule": "0 * * * *"
+      "schedule": "0 0 * * *"
     }
   ],
   "headers": [
